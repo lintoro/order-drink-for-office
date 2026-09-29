@@ -391,7 +391,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
               {/* 快速示範熱門點選 */}
               <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
                 <span className="font-bold">快速試用：</span>
-                {['清心福全', '一沐日 新竹巨城', '可不可熟成紅茶', '五桐號 台北信義', '得正 Oolong TEA'].map((demo) => (
+                {['UG 樂己 南投復興店', '清心福全 南投南陽店', '一沐日 新竹巨城', '可不可熟成紅茶', '五桐號 台北信義', '得正 Oolong TEA'].map((demo) => (
                   <button
                     type="button"
                     key={demo}

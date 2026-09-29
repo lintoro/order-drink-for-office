@@ -197,8 +197,22 @@ async function callGeminiApi(payloadParts, customApiKey = '') {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    const message = errorData.error?.message || `API 回應錯誤碼: ${response.status}`;
-    throw new Error(`Gemini 3.8 Flash 辨識失敗: ${message}`);
+    const rawMessage = errorData.error?.message || `API 回應錯誤碼: ${response.status}`;
+
+    // 針對 Google Free Tier 429 頻率配額限制友善轉譯
+    if (
+      response.status === 429 ||
+      rawMessage.includes('Quota exceeded') ||
+      rawMessage.includes('exceeded your current quota')
+    ) {
+      const retryMatch = rawMessage.match(/retry in ([0-9.]+)s/i);
+      const retrySeconds = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 18;
+      throw new Error(
+        `Google 免費 API 每分鐘使用頻率已達上限（Rate Limit）。請稍候 ${retrySeconds} 秒冷卻時間後，再次點擊即可正常生成！`
+      );
+    }
+
+    throw new Error(`Gemini 3.8 Flash 辨識失敗: ${rawMessage}`);
   }
 
   const result = await response.json();
