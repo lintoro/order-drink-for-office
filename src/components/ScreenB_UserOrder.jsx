@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { getLastNickname, saveLastNickname } from '../utils/storage';
+import {
+  getLastNickname,
+  saveLastNickname,
+  getDeviceNicknames,
+  addDeviceNickname,
+  removeDeviceNickname,
+} from '../utils/storage';
 import { calculateItemTotal, calculateDeliveryFee, upsertUserOrder } from '../utils/calc';
 import { isCloudModeEnabled } from '../services/syncService';
 import {
@@ -15,6 +21,7 @@ import {
   Phone,
   MapPin,
   CalendarCheck,
+  UserPlus,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -23,6 +30,14 @@ const ICE_OPTIONS = ['正常冰', '少冰', '微冰', '去冰', '完全去冰', 
 
 export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmin }) {
   const [userName, setUserName] = useState(getLastNickname());
+  const [deviceNicknames, setDeviceNicknames] = useState(() =>
+    groupData?.orderId ? getDeviceNicknames(groupData.orderId) : []
+  );
+  const [activeViewNickname, setActiveViewNickname] = useState(() => {
+    const list = groupData?.orderId ? getDeviceNicknames(groupData.orderId) : [];
+    const last = getLastNickname();
+    return list.includes(last) ? last : list[0] || last;
+  });
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedItemName, setSelectedItemName] = useState('');
   const [selectedSize, setSelectedSize] = useState('大杯'); // 中杯 | 大杯
@@ -65,15 +80,21 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
     }
   };
 
-  // 送單 (同暱稱自動覆蓋)
+  // 送單 (同暱稱自動覆蓋，不同暱稱累加獨立)
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!userName.trim()) {
+    const trimmedName = userName.trim();
+    if (!trimmedName) {
       alert('請先輸入您的暱稱以方便主揪統計！');
       return;
     }
 
-    saveLastNickname(userName);
+    saveLastNickname(trimmedName);
+    if (groupData?.orderId) {
+      addDeviceNickname(groupData.orderId, trimmedName);
+      setDeviceNicknames(getDeviceNicknames(groupData.orderId));
+    }
+    setActiveViewNickname(trimmedName);
 
     const newItem = {
       itemName: currentItemObj.name,
@@ -86,7 +107,7 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
     };
 
     const newOrderData = {
-      userName: userName.trim(),
+      userName: trimmedName,
       items: [newItem],
     };
 
@@ -100,23 +121,41 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
 
     // 觸發彩花與成功提示
     confetti({ particleCount: 40, spread: 60, origin: { y: 0.8 } });
-    setSubmitSuccessMsg(`已成功送單！同名送單將自動覆蓋，請安心選購。`);
+    setSubmitSuccessMsg(`已成功為「${trimmedName}」送單！`);
     setTimeout(() => setSubmitSuccessMsg(''), 4000);
   };
 
-  // 取消個人訂單 (需求 3)
+  // 取消當前檢視的個人/代點訂單
   const handleCancelMyOrder = () => {
-    if (!userName.trim()) return;
-    if (window.confirm(`確定要取消「${userName}」的這筆訂單嗎？`)) {
+    const targetName = activeViewNickname || userName.trim();
+    if (!targetName) return;
+    if (window.confirm(`確定要取消「${targetName}」的這筆訂單嗎？`)) {
       const updatedOrders = (groupData?.orders || []).filter(
-        (o) => o.userName.trim().toLowerCase() !== userName.trim().toLowerCase()
+        (o) => o.userName.trim().toLowerCase() !== targetName.toLowerCase()
       );
+      if (groupData?.orderId) {
+        removeDeviceNickname(groupData.orderId, targetName);
+        const remaining = getDeviceNicknames(groupData.orderId);
+        setDeviceNicknames(remaining);
+        setActiveViewNickname(remaining[0] || '');
+      }
       onUpdateGroup({
         ...groupData,
         orders: updatedOrders,
       });
-      setSubmitSuccessMsg('已成功取消您的點單！');
+      setSubmitSuccessMsg(`已成功取消「${targetName}」的點單！`);
       setTimeout(() => setSubmitSuccessMsg(''), 3000);
+    }
+  };
+
+  // 切換至代點下一位同仁（清空表單，不覆蓋上一位）
+  const handleSwitchToNewColleague = () => {
+    setUserName('');
+    setNote('');
+    setSelectedToppings([]);
+    const formSec = document.getElementById('order-input-form');
+    if (formSec) {
+      formSec.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -124,6 +163,7 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
   const handleEditMyOrder = () => {
     if (!myOrder || !myOrder.items?.[0]) return;
     const it = myOrder.items[0];
+    setUserName(myOrder.userName);
     setSelectedItemName(it.itemName);
     setSelectedSize(it.size || '大杯');
     setSelectedSugar(it.sugar || '微糖 3分');
@@ -134,9 +174,10 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
     if (formSec) formSec.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // 查詢當前使用者的訂單 (用作個人取餐卡與付款資訊)
+  // 查詢當前檢視使用者的訂單 (用作個人取餐卡與付款資訊)
+  const currentTargetName = activeViewNickname || userName;
   const myOrder = groupData?.orders?.find(
-    (o) => o.userName.trim().toLowerCase() === userName.trim().toLowerCase()
+    (o) => o.userName.trim().toLowerCase() === currentTargetName.trim().toLowerCase()
   );
 
   // 計算外送費平攤
@@ -261,6 +302,40 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
       {/* 📋 需求 3 核心：同仁點單確認卡 (回頭確認專區) */}
       {groupData?.status !== 'arrived' && myOrder && (
         <div className="bg-emerald-50 border-2 border-emerald-300/80 rounded-2xl p-5 shadow-sm space-y-4 animate-in fade-in duration-300">
+          {/* 本設備代點同仁標籤切換 */}
+          {deviceNicknames.length > 1 && (
+            <div className="flex flex-wrap items-center gap-1.5 pb-2 border-b border-emerald-200/60">
+              <span className="text-[11px] text-slate-500 font-bold mr-1">本機代點清單:</span>
+              {deviceNicknames.map((nick) => {
+                const ord = (groupData.orders || []).find(
+                  (o) => o.userName.trim().toLowerCase() === nick.toLowerCase()
+                );
+                if (!ord) return null;
+                const isSelected = nick.toLowerCase() === currentTargetName.trim().toLowerCase();
+                return (
+                  <button
+                    key={nick}
+                    type="button"
+                    onClick={() => {
+                      setActiveViewNickname(nick);
+                      setUserName(nick);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                      isSelected
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-white text-slate-600 hover:bg-emerald-100/70 border border-emerald-200'
+                    }`}
+                  >
+                    <span>{nick}</span>
+                    <span className="text-[10px] opacity-80">
+                      ({ord.isPaid ? '已付' : '未付'})
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           <div className="flex items-center justify-between border-b border-emerald-200/80 pb-3">
             <div className="flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-600" />
@@ -320,23 +395,32 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
             </div>
           </div>
 
-          {/* 結單前可修改與退單按鈕 */}
+          {/* 結單前可修改、退單與換人代點按鈕 */}
           {groupData.status === 'open' && (
-            <div className="flex items-center justify-end gap-2 pt-1 border-t border-emerald-200/60">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-emerald-200/60">
               <button
                 type="button"
-                onClick={handleCancelMyOrder}
-                className="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold transition-all"
+                onClick={handleSwitchToNewColleague}
+                className="px-3 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
               >
-                🗑️ 取消此單
+                <UserPlus className="w-3.5 h-3.5" /> 換人點餐 / 幫同事代點
               </button>
-              <button
-                type="button"
-                onClick={handleEditMyOrder}
-                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
-              >
-                ✏️ 修改我的點單
-              </button>
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  type="button"
+                  onClick={handleCancelMyOrder}
+                  className="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold transition-all"
+                >
+                  🗑️ 取消此單
+                </button>
+                <button
+                  type="button"
+                  onClick={handleEditMyOrder}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+                >
+                  ✏️ 修改此單
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -345,6 +429,40 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
       {/* 🌟 飲料已送達：置頂顯示「個人取餐卡」 */}
       {groupData?.status === 'arrived' && myOrder && (
         <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl p-6 shadow-lg space-y-4">
+          {/* 送達狀態多訂單切換標籤 */}
+          {deviceNicknames.length > 1 && (
+            <div className="flex flex-wrap items-center gap-1.5 pb-2 border-b border-white/20">
+              <span className="text-xs text-amber-100 font-bold mr-1">本機代點清單:</span>
+              {deviceNicknames.map((nick) => {
+                const ord = (groupData.orders || []).find(
+                  (o) => o.userName.trim().toLowerCase() === nick.toLowerCase()
+                );
+                if (!ord) return null;
+                const isSelected = nick.toLowerCase() === currentTargetName.trim().toLowerCase();
+                return (
+                  <button
+                    key={nick}
+                    type="button"
+                    onClick={() => {
+                      setActiveViewNickname(nick);
+                      setUserName(nick);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                      isSelected
+                        ? 'bg-white text-amber-800 shadow'
+                        : 'bg-white/20 text-white hover:bg-white/30'
+                    }`}
+                  >
+                    <span>{nick}</span>
+                    <span className="text-[10px] opacity-80">
+                      ({ord.isPicked ? '已取' : '未取'})
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           <div className="flex items-center justify-between border-b border-white/20 pb-3">
             <div className="flex items-center gap-2">
               <ShoppingBag className="w-6 h-6 text-amber-200" />
@@ -404,9 +522,16 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
 
           {/* 1. 暱稱 */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              您的暱稱 (重複送單將自動覆蓋)
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                點餐者暱稱
+              </label>
+              {userName === '' && deviceNicknames.length > 0 && (
+                <span className="text-[11px] text-teal-600 font-bold bg-teal-50 px-2 py-0.5 rounded-md">
+                  ✨ 正在為新同仁點餐 (送單後獨立列單，不覆蓋上一位)
+                </span>
+              )}
+            </div>
             <input
               type="text"
               value={userName}
@@ -415,6 +540,9 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
               required
               className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
             />
+            <p className="text-[11px] text-slate-400 mt-1">
+              若輸入相同暱稱將自動更新原訂單；輸入新暱稱則會獨立新增一杯。
+            </p>
           </div>
 
           {/* 2. 分類與飲料名稱 */}

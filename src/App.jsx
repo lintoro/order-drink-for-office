@@ -5,21 +5,21 @@ import ScreenA_Create from './components/ScreenA_Create';
 import ScreenB_UserOrder from './components/ScreenB_UserOrder';
 import ScreenC_Admin from './components/ScreenC_Admin';
 import Modal_HistoryArchives from './components/Modal_HistoryArchives';
-import { getGroupOrder, saveGroupOrder, clearGroupOrder, archiveGroupOrder } from './utils/storage';
+import { getGroupOrder, saveGroupOrder, clearGroupOrder, archiveGroupOrder, getAdminToken } from './utils/storage';
 import { subscribeToGroup, syncSaveGroup, syncUpdateGroup, isCloudModeEnabled } from './services/syncService';
 import { DEFAULT_STORES } from './data/defaultStores';
 import { generateAdminToken } from './utils/calc';
 
-// 取得乾淨的初始團購資料 (清除開發期 demo 示範假資料)
-function getCleanInitialGroup() {
-  const saved = getGroupOrder();
+// 取得乾淨的初始團購資料 (依 targetOrderId 隔離，並清除 demo 示範假資料)
+function getCleanInitialGroup(targetOrderId = null) {
+  const saved = getGroupOrder(targetOrderId);
   // 若本機殘留開發期的 demo 假資料，自動予以清除
   if (
     saved &&
     (saved.orderId === 'demo_group_001' ||
       saved.orders?.some((o) => o.userName === '王小美' || o.userName === '張阿明'))
   ) {
-    clearGroupOrder();
+    clearGroupOrder(saved.orderId);
     return null;
   }
   return saved || null;
@@ -31,7 +31,7 @@ export default function App() {
   const urlOrderId = searchParams.get('order');
   const urlToken = searchParams.get('token');
 
-  const [groupData, setGroupData] = useState(getCleanInitialGroup);
+  const [groupData, setGroupData] = useState(() => getCleanInitialGroup(urlOrderId));
   const [initialAdminName, setInitialAdminName] = useState('');
   const [showHistoryModal, setShowHistoryModal] = useState(false);
 
@@ -51,7 +51,11 @@ export default function App() {
   // 一鍵重設系統（清除本機暫存團購）
   const handleResetSystem = () => {
     if (window.confirm('確定要清除當前團購資料，重設為全新的乾淨系統嗎？')) {
-      clearGroupOrder();
+      if (groupData?.orderId) {
+        clearGroupOrder(groupData.orderId);
+      } else {
+        clearGroupOrder();
+      }
       setGroupData(null);
       setCurrentView('portal');
       window.history.replaceState({}, '', window.location.pathname);
@@ -61,7 +65,7 @@ export default function App() {
   // 結案歸檔此團 (需求 4)
   const handleArchiveGroup = (groupToArchive) => {
     archiveGroupOrder(groupToArchive);
-    clearGroupOrder();
+    clearGroupOrder(groupToArchive.orderId);
     setGroupData(null);
     window.history.replaceState({}, '', window.location.pathname);
     setCurrentView('portal');
@@ -71,16 +75,24 @@ export default function App() {
   // 從大廳發起開團 (需求 2)
   const handleStartCreate = (adminNickname) => {
     setInitialAdminName(adminNickname);
+    window.history.pushState({}, '', window.location.pathname);
     setCurrentView('create');
   };
 
-  // 從大廳輸入代碼加入點餐
+  // 從大廳加入點餐 (支援多團精準載入)
   const handleJoinOrder = (targetOrderId) => {
-    if (groupData && groupData.orderId === targetOrderId) {
-      setCurrentView('order');
-    } else {
-      window.location.search = `?order=${targetOrderId}`;
+    window.history.pushState({}, '', `?order=${targetOrderId}`);
+    const targetGroup = getGroupOrder(targetOrderId);
+    if (targetGroup) {
+      setGroupData(targetGroup);
     }
+    setCurrentView('order');
+  };
+
+  // 回到大廳
+  const handleGoToPortal = () => {
+    window.history.pushState({}, '', window.location.pathname);
+    setCurrentView('portal');
   };
 
   // 從歷史紀錄再次開團
@@ -90,10 +102,12 @@ export default function App() {
     setCurrentView('create');
   };
 
-  // 本機儲存之主揪 token 記憶
-  const localAdminToken = groupData?.adminToken;
+  // 本機儲存之主揪 token 記憶 (支援多團主揪 Token 字典)
+  const currentOrderId = urlOrderId || groupData?.orderId;
+  const localAdminToken = groupData?.adminToken || (currentOrderId ? getAdminToken(currentOrderId) : null);
   const isUserTheAdmin =
     (urlToken && urlToken === groupData?.adminToken) ||
+    (urlToken && urlToken === localAdminToken) ||
     (!urlToken && localAdminToken && localAdminToken === groupData?.adminToken);
 
   // 訂閱資料同步 (Firebase 雲端 或 本機跨分頁)
@@ -133,7 +147,13 @@ export default function App() {
       {/* 頂部導覽 */}
       <Navbar
         currentView={currentView}
-        setCurrentView={setCurrentView}
+        setCurrentView={(view) => {
+          if (view === 'portal') {
+            handleGoToPortal();
+          } else {
+            setCurrentView(view);
+          }
+        }}
         groupData={groupData}
         onResetSystem={handleResetSystem}
         onOpenHistory={() => setShowHistoryModal(true)}

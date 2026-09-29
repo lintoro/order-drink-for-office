@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { getGeminiApiKey, setGeminiApiKey } from '../src/services/geminiService';
-import { getCustomStores, saveCustomStore, getGroupOrder, saveGroupOrder, clearGroupOrder, getArchivedGroups, archiveGroupOrder, deleteArchivedGroup } from '../src/utils/storage';
+import { getCustomStores, saveCustomStore, getGroupOrder, saveGroupOrder, clearGroupOrder, getArchivedGroups, archiveGroupOrder, deleteArchivedGroup, getAllActiveGroups, getAdminToken, getDeviceNicknames, addDeviceNickname, removeDeviceNickname } from '../src/utils/storage';
 import { getFirebaseConfig, saveFirebaseConfig } from '../src/services/firebaseService';
 
 // Node 環境 localStorage mock
@@ -38,6 +38,40 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
       // 執行重設清除
       clearGroupOrder();
       expect(getGroupOrder()).toBeNull();
+    });
+
+    it('支援多團獨立並存 (A開一團、B開一團互不覆蓋)', () => {
+      const groupA = { orderId: 'grp_A', storeName: '50嵐', adminToken: 'token_A', orders: [] };
+      const groupB = { orderId: 'grp_B', storeName: '可不可', adminToken: 'token_B', orders: [] };
+
+      saveGroupOrder(groupA);
+      saveGroupOrder(groupB);
+
+      // 兩團均可透過 orderId 精準檢索
+      expect(getGroupOrder('grp_A').storeName).toBe('50嵐');
+      expect(getGroupOrder('grp_B').storeName).toBe('可不可');
+
+      // 主揪 Token 字典正確隔離
+      expect(getAdminToken('grp_A')).toBe('token_A');
+      expect(getAdminToken('grp_B')).toBe('token_B');
+
+      // 活躍團購清單包含兩團
+      const activeList = getAllActiveGroups();
+      expect(activeList.length).toBe(2);
+
+      // 清除其中一團，另一團不受影響
+      clearGroupOrder('grp_A');
+      expect(getGroupOrder('grp_A')).toBeNull();
+      expect(getGroupOrder('grp_B').storeName).toBe('可不可');
+    });
+
+    it('支援同設備代點同仁暱稱清單管理', () => {
+      addDeviceNickname('grp_test', '小明');
+      addDeviceNickname('grp_test', '小華');
+      expect(getDeviceNicknames('grp_test')).toEqual(['小明', '小華']);
+
+      removeDeviceNickname('grp_test', '小明');
+      expect(getDeviceNicknames('grp_test')).toEqual(['小華']);
     });
   });
 
