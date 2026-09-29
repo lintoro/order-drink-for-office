@@ -70,18 +70,69 @@ export function setGeminiApiKey(key) {
 }
 
 /**
- * 將 File 物件轉為 Base64 字串
+ * 將 File 物件轉為 Base64 字串 (支援瀏覽器端智慧影像等比壓縮，大幅減少 Token 消耗並加速辨識)
  */
-export function fileToBase64(file) {
+export function fileToBase64(file, maxWidth = 1600, maxHeight = 1600, quality = 0.82) {
   return new Promise((resolve, reject) => {
+    // 若為非瀏覽器環境（如單元測試）或非影像檔案，走標準 FileReader
+    if (typeof window === 'undefined' || typeof document === 'undefined' || !file.type?.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64String = reader.result.split(',')[1];
+        resolve({
+          mimeType: file.type || 'image/jpeg',
+          data: base64String,
+        });
+      };
+      reader.onerror = (error) => reject(error);
+      return;
+    }
+
+    // 瀏覽器端：使用 Canvas 進行等比壓縮縮圖，兼顧菜單清晰度與極致省 Token
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => {
-      const base64String = reader.result.split(',')[1];
-      resolve({
-        mimeType: file.type || 'image/jpeg',
-        data: base64String,
-      });
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        // 若圖片尺寸超出上限，進行等比縮小
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          // 若無法取得 context 則退回原圖
+          const base64String = event.target.result.split(',')[1];
+          resolve({ mimeType: file.type || 'image/jpeg', data: base64String });
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        const base64String = dataUrl.split(',')[1];
+        resolve({
+          mimeType: 'image/jpeg',
+          data: base64String,
+        });
+      };
+      img.onerror = () => {
+        const base64String = event.target.result.split(',')[1];
+        resolve({ mimeType: file.type || 'image/jpeg', data: base64String });
+      };
+      img.src = event.target.result;
     };
     reader.onerror = (error) => reject(error);
   });
