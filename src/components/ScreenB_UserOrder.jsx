@@ -28,7 +28,7 @@ import confetti from 'canvas-confetti';
 const SUGAR_OPTIONS = ['正常糖', '少糖 7分', '半糖 5分', '微糖 3分', '一分糖', '無糖'];
 const ICE_OPTIONS = ['正常冰', '少冰', '微冰', '去冰', '完全去冰', '常溫', '溫熱'];
 
-export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmin }) {
+export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmin, isAuthorized = false }) {
   const [userName, setUserName] = useState(getLastNickname());
   const [deviceNicknames, setDeviceNicknames] = useState(() =>
     groupData?.orderId ? getDeviceNicknames(groupData.orderId) : []
@@ -217,8 +217,8 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-5">
-      {/* 主揪本機快捷按鈕 */}
-      {onGoToAdmin && (
+      {/* 主揪本機快捷按鈕 (僅授權主揪可見) */}
+      {isAuthorized && onGoToAdmin && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 flex items-center justify-between text-xs text-amber-900">
           <div className="flex items-center gap-1.5 font-bold">
             <ShieldCheck className="w-4 h-4 text-amber-600" />

@@ -211,6 +211,7 @@ export default function App() {
             <ScreenB_UserOrder
               groupData={groupData}
               onUpdateGroup={handleUpdateGroup}
+              isAuthorized={isUserTheAdmin}
               onGoToAdmin={(targetView) => {
                 const view = typeof targetView === 'string' ? targetView : 'admin';
                 if (view === 'admin') {
