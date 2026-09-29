@@ -44,7 +44,10 @@ import {
   Eye,
 } from 'lucide-react';
 
-export default function ScreenA_Create({ onGroupCreated }) {
+export default function ScreenA_Create({ onGroupCreated, initialAdminName = '' }) {
+  // 主揪暱稱 (入口大廳傳入或本機記憶)
+  const [adminName, setAdminName] = useState(initialAdminName || '主揪');
+
   // 店家清單（結合內建與自訂歷史庫）
   const [customStores, setCustomStores] = useState(getCustomStores());
   const allStores = [...customStores, ...DEFAULT_STORES];
@@ -64,6 +67,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
   const [storeName, setStoreName] = useState(currentPreset.name);
   const [branchName, setBranchName] = useState(currentPreset.branchName || '');
   const [phone, setPhone] = useState(currentPreset.phone || '');
+  const [address, setAddress] = useState(currentPreset.address || '');
   const [region, setRegion] = useState(currentPreset.region || '中南部價');
   const [businessHours, setBusinessHours] = useState(currentPreset.businessHours || '09:30 - 21:30');
   const [isOpenToday, setIsOpenToday] = useState(
@@ -71,6 +75,16 @@ export default function ScreenA_Create({ onGroupCreated }) {
   );
   const [menuCategories, setMenuCategories] = useState(currentPreset.categories);
   const [toppings, setToppings] = useState(currentPreset.toppings);
+
+  // 主揪本人點餐 state (需求 2 核心：主揪自己也要能訂飲料)
+  const [adminWantDrink, setAdminWantDrink] = useState(false);
+  const [adminDrinkCategory, setAdminDrinkCategory] = useState(currentPreset.categories?.[0]?.name || '');
+  const [adminDrinkItem, setAdminDrinkItem] = useState(currentPreset.categories?.[0]?.items?.[0]?.name || '');
+  const [adminDrinkSize, setAdminDrinkSize] = useState('大杯');
+  const [adminDrinkSugar, setAdminDrinkSugar] = useState('微糖 3分');
+  const [adminDrinkIce, setAdminDrinkIce] = useState('微冰');
+  const [adminDrinkToppings, setAdminDrinkToppings] = useState([]);
+  const [adminDrinkNote, setAdminDrinkNote] = useState('');
 
   // AI 辨識輸入模式切換 ('text' | 'image')
   const [aiMode, setAiMode] = useState('text');
@@ -363,12 +377,42 @@ export default function ScreenA_Create({ onGroupCreated }) {
     const publicUrl = `${baseUrl}?order=${orderId}`;
     const adminUrl = `${baseUrl}?order=${orderId}&token=${adminToken}`;
 
+    // 建立主揪自己的第一杯飲料 (需求 2：主揪自己也要能訂飲料)
+    const initialOrders = [];
+    const validAdminName = adminName.trim() || '主揪';
+    if (adminWantDrink && adminDrinkItem) {
+      const catObj = menuCategories.find((c) => c.name === adminDrinkCategory) || menuCategories[0];
+      const itObj = catObj?.items?.find((i) => i.name === adminDrinkItem) || catObj?.items?.[0];
+      const basePrice = adminDrinkSize === '中杯' ? itObj?.priceM || 0 : itObj?.priceL || 0;
+
+      initialOrders.push({
+        id: 'ord_host_' + Date.now(),
+        userName: validAdminName,
+        items: [
+          {
+            itemName: adminDrinkItem,
+            size: adminDrinkSize,
+            price: basePrice,
+            sugar: adminDrinkSugar,
+            ice: adminDrinkIce,
+            toppings: adminDrinkToppings,
+            note: adminDrinkNote.trim(),
+          },
+        ],
+        isPaid: false,
+        isPicked: false,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
     const newGroup = {
       orderId,
       adminToken,
+      adminName: validAdminName,
       storeName: storeName.trim() || '手搖飲團購',
       branchName: branchName.trim(),
       phone: phone.trim(),
+      address: address.trim(),
       region: region.trim(),
       businessHours: businessHours.trim(),
       isOpenToday,
@@ -380,7 +424,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
       createdAt: new Date().toISOString(),
       publicUrl,
       adminUrl,
-      orders: [], // 點餐名單
+      orders: initialOrders, // 包含主揪自己點的第一筆訂單
     };
 
     setCreatedResult(newGroup);
@@ -667,6 +711,21 @@ export default function ScreenA_Create({ onGroupCreated }) {
               </select>
             </div>
 
+            {/* 主揪暱稱 */}
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                主揪姓名 / 暱稱
+              </label>
+              <input
+                type="text"
+                value={adminName}
+                onChange={(e) => setAdminName(e.target.value)}
+                required
+                placeholder="例如：主揪小明 / 行銷阿豪"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              />
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                 開團店家品牌
@@ -682,15 +741,15 @@ export default function ScreenA_Create({ onGroupCreated }) {
             </div>
           </div>
 
-          {/* 📍 新增：分店詳細資訊、訂購電話、南北分區定價與營業時間 */}
+          {/* 📍 分店詳細資訊與訂購電話 */}
           <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-3.5 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                特定分店資訊與定價分區 (防呆校正)
+                南投實體門市資訊 (外送下單必備)
               </span>
-              <span className="text-[11px] text-slate-400">
-                主揪結單下單必備，避免送錯門市或算錯南北價
+              <span className="text-[11px] text-emerald-600 font-bold">
+                ✓ 已內建南投準確定價
               </span>
             </div>
 
@@ -704,7 +763,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
                   type="text"
                   value={branchName}
                   onChange={(e) => setBranchName(e.target.value)}
-                  placeholder="例如：南投南陽店、信義店"
+                  placeholder="例如：南投民族店、南崗店"
                   className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
@@ -719,57 +778,26 @@ export default function ScreenA_Create({ onGroupCreated }) {
                   type="text"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="例如：049-2236388、02-27221234"
+                  placeholder="例如：049-2248612"
                   className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
             </div>
 
-            {/* 定價分區切換與營業時間 */}
+            {/* 門市地址與營業狀態 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-200/60">
-              {/* 定價分區 */}
+              {/* 門市地址 */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center justify-between">
-                  <span>適用定價分區</span>
-                  <span className="text-[10px] text-emerald-600">
-                    目前：{region}
-                  </span>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  門市地址 / 位置
                 </label>
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => handleAdjustRegionPrice('中南部價')}
-                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
-                      region === '中南部價'
-                        ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    中南部價
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleAdjustRegionPrice('北部價')}
-                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
-                      region === '北部價'
-                        ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    北部價 (+5)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setRegion('全台均一價')}
-                    className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
-                      region === '全台均一價'
-                        ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
-                    }`}
-                  >
-                    均一價
-                  </button>
-                </div>
+                <input
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="例如：南投市民族路 276 號"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
               </div>
 
               {/* 營業時間與營業狀態 */}
@@ -912,6 +940,105 @@ export default function ScreenA_Create({ onGroupCreated }) {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* 👑 主揪本人也點一杯 (需求 2 核心：主揪自己也要能訂飲料) */}
+          <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={adminWantDrink}
+                  onChange={(e) => setAdminWantDrink(e.target.checked)}
+                  className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                />
+                <span className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                  🥤 我自己（主揪）也要喝，順便幫自己點一杯
+                </span>
+              </label>
+              <span className="text-[11px] text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full font-bold">
+                開團自動計入
+              </span>
+            </div>
+
+            {adminWantDrink && (
+              <div className="pt-2 border-t border-emerald-200/60 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs animate-in fade-in duration-200">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">飲料系列分類</label>
+                  <select
+                    value={adminDrinkCategory}
+                    onChange={(e) => {
+                      setAdminDrinkCategory(e.target.value);
+                      const cat = menuCategories.find((c) => c.name === e.target.value);
+                      if (cat?.items?.[0]) setAdminDrinkItem(cat.items[0].name);
+                    }}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg font-medium"
+                  >
+                    {menuCategories.map((c) => (
+                      <option key={c.name} value={c.name}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">選擇飲品</label>
+                  <select
+                    value={adminDrinkItem}
+                    onChange={(e) => setAdminDrinkItem(e.target.value)}
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg font-medium"
+                  >
+                    {(menuCategories.find((c) => c.name === adminDrinkCategory) || menuCategories[0])?.items?.map((it) => (
+                      <option key={it.id || it.name} value={it.name}>
+                        {it.name} (中${it.priceM}/大${it.priceL})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">規格 / 甜度 / 冰塊</label>
+                  <div className="flex gap-1.5">
+                    <select
+                      value={adminDrinkSize}
+                      onChange={(e) => setAdminDrinkSize(e.target.value)}
+                      className="flex-1 px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-medium"
+                    >
+                      <option value="大杯">大杯</option>
+                      <option value="中杯">中杯</option>
+                    </select>
+                    <select
+                      value={adminDrinkSugar}
+                      onChange={(e) => setAdminDrinkSugar(e.target.value)}
+                      className="flex-1 px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-medium"
+                    >
+                      {['微糖 3分', '半糖 5分', '少糖 7分', '正常糖', '一分糖', '無糖'].map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                    <select
+                      value={adminDrinkIce}
+                      onChange={(e) => setAdminDrinkIce(e.target.value)}
+                      className="flex-1 px-2 py-1.5 bg-white border border-slate-300 rounded-lg font-medium"
+                    >
+                      {['微冰', '少冰', '去冰', '完全去冰', '正常冰', '溫熱'].map((i) => (
+                        <option key={i} value={i}>{i}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">備註 (例如環保杯)</label>
+                  <input
+                    type="text"
+                    value={adminDrinkNote}
+                    onChange={(e) => setAdminDrinkNote(e.target.value)}
+                    placeholder="例如：自備環保杯折5元"
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg font-medium"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 開團確認按鈕 */}

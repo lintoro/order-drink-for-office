@@ -104,6 +104,36 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
     setTimeout(() => setSubmitSuccessMsg(''), 4000);
   };
 
+  // 取消個人訂單 (需求 3)
+  const handleCancelMyOrder = () => {
+    if (!userName.trim()) return;
+    if (window.confirm(`確定要取消「${userName}」的這筆訂單嗎？`)) {
+      const updatedOrders = (groupData?.orders || []).filter(
+        (o) => o.userName.trim().toLowerCase() !== userName.trim().toLowerCase()
+      );
+      onUpdateGroup({
+        ...groupData,
+        orders: updatedOrders,
+      });
+      setSubmitSuccessMsg('已成功取消您的點單！');
+      setTimeout(() => setSubmitSuccessMsg(''), 3000);
+    }
+  };
+
+  // 修改個人訂單 (帶入表單重新編輯)
+  const handleEditMyOrder = () => {
+    if (!myOrder || !myOrder.items?.[0]) return;
+    const it = myOrder.items[0];
+    setSelectedItemName(it.itemName);
+    setSelectedSize(it.size || '大杯');
+    setSelectedSugar(it.sugar || '微糖 3分');
+    setSelectedIce(it.ice || '微冰');
+    setSelectedToppings(it.toppings || []);
+    setNote(it.note || '');
+    const formSec = document.getElementById('order-input-form');
+    if (formSec) formSec.scrollIntoView({ behavior: 'smooth' });
+  };
+
   // 查詢當前使用者的訂單 (用作個人取餐卡與付款資訊)
   const myOrder = groupData?.orders?.find(
     (o) => o.userName.trim().toLowerCase() === userName.trim().toLowerCase()
@@ -228,6 +258,90 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
         </div>
       )}
 
+      {/* 📋 需求 3 核心：同仁點單確認卡 (回頭確認專區) */}
+      {groupData?.status !== 'arrived' && myOrder && (
+        <div className="bg-emerald-50 border-2 border-emerald-300/80 rounded-2xl p-5 shadow-sm space-y-4 animate-in fade-in duration-300">
+          <div className="flex items-center justify-between border-b border-emerald-200/80 pb-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+              <span className="font-bold text-slate-800 text-base">您的點餐狀態：已成功登記！</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                  myOrder.isPaid
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-amber-100 text-amber-800 border border-amber-300'
+                }`}
+              >
+                {myOrder.isPaid ? '✓ 主揪已收款' : '尚未付款'}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="text-xs text-slate-500">
+              點餐同仁暱稱：<strong className="text-slate-800 text-sm">{myOrder.userName}</strong>
+            </div>
+
+            <div className="bg-white rounded-xl p-3 border border-emerald-200/60 divide-y divide-slate-100 text-xs space-y-2">
+              {myOrder.items?.map((it, idx) => (
+                <div key={idx} className="pt-1.5 first:pt-0 flex justify-between items-start">
+                  <div>
+                    <span className="font-bold text-slate-800 text-sm">{it.itemName}</span>
+                    <span className="text-slate-500 ml-1">({it.size})</span>
+                    <div className="text-slate-500 mt-0.5">
+                      甜度/冰塊：<span className="font-medium text-slate-700">{it.sugar} / {it.ice}</span>
+                      {it.toppings?.length > 0 && (
+                        <span className="ml-1 text-emerald-600">
+                          + {it.toppings.map((t) => t.name).join(' ')}
+                        </span>
+                      )}
+                      {it.note && <span className="ml-1 text-amber-600">({it.note})</span>}
+                    </div>
+                  </div>
+                  <span className="font-black text-slate-800 text-sm">
+                    ${calculateItemTotal(it.price, it.toppings)}
+                  </span>
+                </div>
+              ))}
+
+              {deliveryCalc.perPersonFee > 0 && (
+                <div className="pt-2 flex justify-between items-center text-slate-500">
+                  <span>外送費無條件進位平攤 ({groupData.orders?.length || 1}人均分)</span>
+                  <span className="font-bold text-slate-700">+${deliveryCalc.perPersonFee}</span>
+                </div>
+              )}
+
+              <div className="pt-2 flex justify-between items-baseline font-black text-slate-800 text-sm">
+                <span>應付總額（含平攤外送費）</span>
+                <span className="text-2xl text-emerald-700">${myTotalPayable}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 結單前可修改與退單按鈕 */}
+          {groupData.status === 'open' && (
+            <div className="flex items-center justify-end gap-2 pt-1 border-t border-emerald-200/60">
+              <button
+                type="button"
+                onClick={handleCancelMyOrder}
+                className="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold transition-all"
+              >
+                🗑️ 取消此單
+              </button>
+              <button
+                type="button"
+                onClick={handleEditMyOrder}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm"
+              >
+                ✏️ 修改我的點單
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* 🌟 飲料已送達：置頂顯示「個人取餐卡」 */}
       {groupData?.status === 'arrived' && myOrder && (
         <div className="bg-gradient-to-br from-amber-500 to-amber-600 text-white rounded-2xl p-6 shadow-lg space-y-4">
@@ -276,7 +390,11 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
 
       {/* 點餐表單區 (未鎖定時開放) */}
       {groupData?.status === 'open' ? (
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-5">
+        <form
+          id="order-input-form"
+          onSubmit={handleSubmit}
+          className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-5"
+        >
           {submitSuccessMsg && (
             <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-emerald-600" />

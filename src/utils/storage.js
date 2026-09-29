@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
   USER_NICKNAME: 'drink_order_user_nickname',
   CUSTOM_STORES: 'drink_order_custom_stores',
   HIDDEN_STORES: 'drink_order_hidden_stores',
+  ARCHIVED_GROUPS: 'drink_order_archived_groups',
 };
 
 // 讀取當前團購資料
@@ -42,6 +43,50 @@ export function clearGroupOrder() {
     return true;
   } catch (e) {
     console.error('清除團購資料失敗', e);
+    return false;
+  }
+}
+
+// 取得歷史歸檔團購清單
+export function getArchivedGroups() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.ARCHIVED_GROUPS);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error('讀取歷史團購失敗', e);
+    return [];
+  }
+}
+
+// 結案並將當前團購歸檔至歷史庫
+export function archiveGroupOrder(groupData) {
+  if (!groupData) return false;
+  try {
+    const existing = getArchivedGroups();
+    const archivedItem = {
+      ...groupData,
+      archivedAt: new Date().toISOString(),
+    };
+    // 最多保留最新 50 筆
+    const updated = [archivedItem, ...existing.filter((g) => g.orderId !== groupData.orderId)].slice(0, 50);
+    localStorage.setItem(STORAGE_KEYS.ARCHIVED_GROUPS, JSON.stringify(updated));
+    // 同時清除當前進行中團購
+    clearGroupOrder();
+    return true;
+  } catch (e) {
+    console.error('歸檔團購失敗', e);
+    return false;
+  }
+}
+
+// 刪除單筆歷史紀錄
+export function deleteArchivedGroup(orderId) {
+  try {
+    const existing = getArchivedGroups();
+    const updated = existing.filter((g) => g.orderId !== orderId);
+    localStorage.setItem(STORAGE_KEYS.ARCHIVED_GROUPS, JSON.stringify(updated));
+    return true;
+  } catch (e) {
     return false;
   }
 }

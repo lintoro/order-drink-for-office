@@ -32,10 +32,26 @@ export default function ScreenC_Admin({
   isAuthorized = true,
   onGoToCreate,
   onResetSystem,
+  onArchiveGroup,
+  onViewHistory,
 }) {
   const [copyMsg, setCopyMsg] = useState('');
   const [editingPhone, setEditingPhone] = useState(groupData?.phone || '');
   const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [showHostOrderModal, setShowHostOrderModal] = useState(false);
+
+  // 主揪點餐彈窗 state (需求 2：主揪自己也能點/改飲料)
+  const hostOrder = groupData?.orders?.find(
+    (o) => o.userName.trim().toLowerCase() === (groupData.adminName || '主揪').trim().toLowerCase()
+  );
+  const [hostCat, setHostCat] = useState(groupData?.categories?.[0]?.name || '');
+  const [hostItem, setHostItem] = useState(groupData?.categories?.[0]?.items?.[0]?.name || '');
+  const [hostSize, setHostSize] = useState('大杯');
+  const [hostSugar, setHostSugar] = useState('微糖 3分');
+  const [hostIce, setHostIce] = useState('微冰');
+  const [hostToppings, setHostToppings] = useState([]);
+  const [hostNote, setHostNote] = useState('');
+
   const isCloud = isCloudModeEnabled();
 
   if (!groupData) {
@@ -48,15 +64,90 @@ export default function ScreenC_Admin({
         <p className="text-sm text-slate-500 leading-relaxed">
           您目前尚未發起飲料團。立即建立新團購，即可開始在辦公室揪團統計與管理！
         </p>
-        <button
-          onClick={() => (onGoToCreate ? onGoToCreate() : null)}
-          className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm"
-        >
-          ➕ 立即發起開團
-        </button>
+        <div className="flex flex-col gap-2 pt-2">
+          <button
+            onClick={() => (onGoToCreate ? onGoToCreate() : null)}
+            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm"
+          >
+            ➕ 立即發起開團
+          </button>
+          {onViewHistory && (
+            <button
+              onClick={onViewHistory}
+              className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all text-xs"
+            >
+              📜 查看歷史開團紀錄
+            </button>
+          )}
+        </div>
       </div>
     );
   }
+
+  // 結案歸檔此團 (需求 4)
+  const handleArchive = () => {
+    if (
+      window.confirm(
+        `確定要將「${groupData.storeName}」本次團購結案歸檔嗎？\n\n所有點餐名單、應付現金與核銷狀態將完整保存於歷史檔案庫中，供日後查閱與匯出 CSV 報帳！`
+      )
+    ) {
+      if (onArchiveGroup) {
+        onArchiveGroup(groupData);
+      }
+    }
+  };
+
+  // 儲存主揪自己的飲料
+  const handleSaveHostDrink = (e) => {
+    e.preventDefault();
+    const hostName = groupData.adminName || '主揪';
+    const catObj = groupData.categories?.find((c) => c.name === hostCat) || groupData.categories?.[0];
+    const itemObj = catObj?.items?.find((i) => i.name === hostItem) || catObj?.items?.[0];
+    const basePrice = hostSize === '中杯' ? itemObj?.priceM || 0 : itemObj?.priceL || 0;
+
+    const newOrderData = {
+      userName: hostName,
+      items: [
+        {
+          itemName: hostItem,
+          size: hostSize,
+          price: basePrice,
+          sugar: hostSugar,
+          ice: hostIce,
+          toppings: hostToppings,
+          note: hostNote.trim(),
+        },
+      ],
+    };
+
+    const existingOrders = groupData.orders || [];
+    const index = existingOrders.findIndex(
+      (o) => o.userName.trim().toLowerCase() === hostName.trim().toLowerCase()
+    );
+
+    let updatedOrders;
+    if (index !== -1) {
+      updatedOrders = [...existingOrders];
+      updatedOrders[index] = { ...updatedOrders[index], ...newOrderData };
+    } else {
+      updatedOrders = [
+        ...existingOrders,
+        {
+          id: 'ord_host_' + Date.now(),
+          isPaid: false,
+          isPicked: false,
+          createdAt: new Date().toISOString(),
+          ...newOrderData,
+        },
+      ];
+    }
+
+    onUpdateGroup({
+      ...groupData,
+      orders: updatedOrders,
+    });
+    setShowHostOrderModal(false);
+  };
 
   // 若 Token 驗證不合法的防呆提示
   if (!isAuthorized) {
@@ -245,6 +336,24 @@ export default function ScreenC_Admin({
           >
             <Send className="w-3.5 h-3.5" /> 📢 飲料已送達！發布取餐通知
           </button>
+
+          {/* 🥤 主揪自己點餐/修改飲料 */}
+          <button
+            onClick={() => setShowHostOrderModal(true)}
+            className="px-3 py-1.5 bg-teal-600 hover:bg-teal-500 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1 shadow-sm"
+          >
+            🥤 {hostOrder ? `主揪已點 (${hostOrder.items?.[0]?.itemName || '點我修改'})` : '+ 我也要點一杯'}
+          </button>
+
+          {/* 📦 結案歸檔此團 */}
+          {onArchiveGroup && (
+            <button
+              onClick={handleArchive}
+              className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1 shadow-sm sm:ml-auto"
+            >
+              📦 結案歸檔此團
+            </button>
+          )}
         </div>
       </div>
 
@@ -496,6 +605,218 @@ export default function ScreenC_Admin({
           </div>
         )}
       </div>
+
+      {/* 🥤 主揪點餐 / 修改飲料彈窗 */}
+      {showHostOrderModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🥤</span>
+                <h3 className="font-bold text-slate-800 text-base">
+                  {hostOrder ? '修改主揪飲料' : '主揪自己點一杯'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowHostOrderModal(false)}
+                className="text-slate-400 hover:text-slate-600 font-bold text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveHostDrink} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">
+                  點餐者暱稱 (主揪)
+                </label>
+                <input
+                  type="text"
+                  disabled
+                  value={`${groupData.adminName || '主揪'} (主揪)`}
+                  className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-500 font-bold"
+                />
+              </div>
+
+              {/* 分類與飲品選擇 */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">飲料分類</label>
+                  <select
+                    value={hostCat}
+                    onChange={(e) => {
+                      const newCat = e.target.value;
+                      setHostCat(newCat);
+                      const catObj = groupData.categories?.find((c) => c.name === newCat);
+                      if (catObj?.items?.length > 0) {
+                        setHostItem(catObj.items[0].name);
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-emerald-500"
+                  >
+                    {groupData.categories?.map((cat) => (
+                      <option key={cat.name} value={cat.name}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">品項名稱</label>
+                  <select
+                    value={hostItem}
+                    onChange={(e) => setHostItem(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-emerald-500"
+                  >
+                    {(
+                      groupData.categories?.find((c) => c.name === hostCat)?.items ||
+                      groupData.categories?.[0]?.items ||
+                      []
+                    ).map((it) => (
+                      <option key={it.name} value={it.name}>
+                        {it.name} (${it.priceL || it.priceM || 0})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* 容量選擇 */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">容量尺寸</label>
+                <div className="flex gap-2">
+                  {['大杯', '中杯'].map((sz) => (
+                    <button
+                      key={sz}
+                      type="button"
+                      onClick={() => setHostSize(sz)}
+                      className={`flex-1 py-1.5 rounded-xl text-xs font-bold border transition-all ${
+                        hostSize === sz
+                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      {sz}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 冰塊與甜度 */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">甜度</label>
+                  <select
+                    value={hostSugar}
+                    onChange={(e) => setHostSugar(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-emerald-500"
+                  >
+                    {[
+                      '正常糖 10分',
+                      '少糖 7分',
+                      '半糖 5分',
+                      '微糖 3分',
+                      '二分糖 2分',
+                      '一分糖 1分',
+                      '無糖 0分',
+                    ].map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">冰塊</label>
+                  <select
+                    value={hostIce}
+                    onChange={(e) => setHostIce(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-emerald-500"
+                  >
+                    {[
+                      '正常冰',
+                      '少冰',
+                      '微冰',
+                      '去冰',
+                      '完全去冰',
+                      '常溫',
+                      '溫飲',
+                      '熱飲',
+                    ].map((ice) => (
+                      <option key={ice} value={ice}>
+                        {ice}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* 加料選擇 */}
+              {groupData.toppings?.length > 0 && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1">加料選項</label>
+                  <div className="flex flex-wrap gap-2">
+                    {groupData.toppings.map((top) => {
+                      const isSelected = hostToppings.some((t) => t.name === top.name);
+                      return (
+                        <button
+                          key={top.name}
+                          type="button"
+                          onClick={() => {
+                            if (isSelected) {
+                              setHostToppings(hostToppings.filter((t) => t.name !== top.name));
+                            } else {
+                              setHostToppings([...hostToppings, top]);
+                            }
+                          }}
+                          className={`text-xs px-2.5 py-1 rounded-lg border font-medium transition-all ${
+                            isSelected
+                              ? 'bg-amber-100 border-amber-400 text-amber-900 font-bold'
+                              : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          + {top.name} (${top.price})
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 備註 */}
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">自訂備註</label>
+                <input
+                  type="text"
+                  value={hostNote}
+                  onChange={(e) => setHostNote(e.target.value)}
+                  placeholder="例如：壓杯、環保杯折5元、不要太甜"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowHostOrderModal(false)}
+                  className="px-4 py-2 bg-slate-100 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-200 transition-all"
+                >
+                  取消
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 shadow-md transition-all"
+                >
+                  {hostOrder ? '確認儲存修改' : '加入點餐名單'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

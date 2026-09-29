@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { getGeminiApiKey, setGeminiApiKey } from '../src/services/geminiService';
-import { getCustomStores, saveCustomStore, getGroupOrder, saveGroupOrder, clearGroupOrder } from '../src/utils/storage';
+import { getCustomStores, saveCustomStore, getGroupOrder, saveGroupOrder, clearGroupOrder, getArchivedGroups, archiveGroupOrder, deleteArchivedGroup } from '../src/utils/storage';
 import { getFirebaseConfig, saveFirebaseConfig } from '../src/services/firebaseService';
 
 // Node 環境 localStorage mock
@@ -38,6 +38,48 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
       // 執行重設清除
       clearGroupOrder();
       expect(getGroupOrder()).toBeNull();
+    });
+  });
+
+  // 0-B. 歷史結案歸檔庫存取測試 (需求 4)
+  describe('歷史結案歸檔庫管理 (Archived Groups Archive)', () => {
+    it('預設無歷史結案紀錄', () => {
+      expect(getArchivedGroups()).toEqual([]);
+    });
+
+    it('能夠結案歸檔一筆團購並寫入 archivedAt 時間戳記', () => {
+      const groupToArchive = {
+        orderId: 'grp_archive_001',
+        storeName: '得正 Oolong Tea Project',
+        branchName: '南投民族店',
+        deliveryFee: 40,
+        orders: [
+          {
+            userName: '小明',
+            isPaid: true,
+            isPicked: true,
+            items: [{ itemName: '焙烏龍茶', size: '大杯', price: 35, sugar: '無糖 0分', ice: '微冰' }],
+          },
+        ],
+      };
+
+      archiveGroupOrder(groupToArchive);
+      const archives = getArchivedGroups();
+      expect(archives.length).toBe(1);
+      expect(archives[0].orderId).toBe('grp_archive_001');
+      expect(archives[0].storeName).toBe('得正 Oolong Tea Project');
+      expect(archives[0].archivedAt).toBeDefined();
+    });
+
+    it('能夠刪除指定的歷史紀錄', () => {
+      archiveGroupOrder({ orderId: 'grp_del_1', storeName: '可不可' });
+      archiveGroupOrder({ orderId: 'grp_del_2', storeName: '麻古' });
+      expect(getArchivedGroups().length).toBe(2);
+
+      deleteArchivedGroup('grp_del_1');
+      const remaining = getArchivedGroups();
+      expect(remaining.length).toBe(1);
+      expect(remaining[0].orderId).toBe('grp_del_2');
     });
   });
 

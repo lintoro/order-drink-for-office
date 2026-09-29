@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
+import ScreenPortal_Landing from './components/ScreenPortal_Landing';
 import ScreenA_Create from './components/ScreenA_Create';
 import ScreenB_UserOrder from './components/ScreenB_UserOrder';
 import ScreenC_Admin from './components/ScreenC_Admin';
-import { getGroupOrder, saveGroupOrder, clearGroupOrder } from './utils/storage';
+import Modal_HistoryArchives from './components/Modal_HistoryArchives';
+import { getGroupOrder, saveGroupOrder, clearGroupOrder, archiveGroupOrder } from './utils/storage';
 import { subscribeToGroup, syncSaveGroup, syncUpdateGroup, isCloudModeEnabled } from './services/syncService';
 import { DEFAULT_STORES } from './data/defaultStores';
 import { generateAdminToken } from './utils/calc';
@@ -30,19 +32,18 @@ export default function App() {
   const urlToken = searchParams.get('token');
 
   const [groupData, setGroupData] = useState(getCleanInitialGroup);
+  const [initialAdminName, setInitialAdminName] = useState('');
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   // 初始視圖智慧判定：
   // 1. 若有 token ➜ 主揪管理後台
   // 2. 若有 orderId ➜ 同事點餐
-  // 3. 若無參數但本機已有團購 ➜ 同事點餐
-  // 4. 若為乾淨新系統 (無團購) ➜ 預設為「主揪開團」
+  // 3. 若無參數 ➜ 入口大廳 (Portal Landing，主揪/同事雙入口)
   const initialView = urlToken
     ? 'admin'
     : urlOrderId
     ? 'order'
-    : groupData
-    ? 'order'
-    : 'create';
+    : 'portal';
 
   const [currentView, setCurrentView] = useState(initialView);
   const [syncStatusText, setSyncStatusText] = useState('');
@@ -52,9 +53,41 @@ export default function App() {
     if (window.confirm('確定要清除當前團購資料，重設為全新的乾淨系統嗎？')) {
       clearGroupOrder();
       setGroupData(null);
-      setCurrentView('create');
+      setCurrentView('portal');
       window.history.replaceState({}, '', window.location.pathname);
     }
+  };
+
+  // 結案歸檔此團 (需求 4)
+  const handleArchiveGroup = (groupToArchive) => {
+    archiveGroupOrder(groupToArchive);
+    clearGroupOrder();
+    setGroupData(null);
+    window.history.replaceState({}, '', window.location.pathname);
+    setCurrentView('portal');
+    alert(`🎉「${groupToArchive.storeName}」已成功結案歸檔！隨時可於歷史紀錄庫中查閱、匯出報帳 CSV 或再次開團。`);
+  };
+
+  // 從大廳發起開團 (需求 2)
+  const handleStartCreate = (adminNickname) => {
+    setInitialAdminName(adminNickname);
+    setCurrentView('create');
+  };
+
+  // 從大廳輸入代碼加入點餐
+  const handleJoinOrder = (targetOrderId) => {
+    if (groupData && groupData.orderId === targetOrderId) {
+      setCurrentView('order');
+    } else {
+      window.location.search = `?order=${targetOrderId}`;
+    }
+  };
+
+  // 從歷史紀錄再次開團
+  const handleRecreateFromHistory = (archivedGroup) => {
+    setShowHistoryModal(false);
+    setInitialAdminName(archivedGroup.adminName || '主揪');
+    setCurrentView('create');
   };
 
   // 本機儲存之主揪 token 記憶
@@ -103,6 +136,7 @@ export default function App() {
         setCurrentView={setCurrentView}
         groupData={groupData}
         onResetSystem={handleResetSystem}
+        onOpenHistory={() => setShowHistoryModal(true)}
       />
 
       {/* 狀態同步即時通知條 */}
@@ -126,8 +160,20 @@ export default function App() {
 
       {/* 主畫面容器 */}
       <main className="flex-1 max-w-4xl w-full mx-auto px-2 pt-4">
+        {currentView === 'portal' && (
+          <ScreenPortal_Landing
+            groupData={groupData}
+            onStartCreate={handleStartCreate}
+            onJoinOrder={handleJoinOrder}
+            onViewHistory={() => setShowHistoryModal(true)}
+          />
+        )}
+
         {currentView === 'create' && (
-          <ScreenA_Create onGroupCreated={handleGroupCreated} />
+          <ScreenA_Create
+            onGroupCreated={handleGroupCreated}
+            initialAdminName={initialAdminName}
+          />
         )}
 
         {currentView === 'order' && (
@@ -145,9 +191,18 @@ export default function App() {
             isAuthorized={isUserTheAdmin}
             onGoToCreate={() => setCurrentView('create')}
             onResetSystem={handleResetSystem}
+            onArchiveGroup={handleArchiveGroup}
+            onViewHistory={() => setShowHistoryModal(true)}
           />
         )}
       </main>
+
+      {/* 📜 歷史結案歸檔紀錄彈窗 (需求 4) */}
+      <Modal_HistoryArchives
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        onRecreateFromHistory={handleRecreateFromHistory}
+      />
     </div>
   );
 }
