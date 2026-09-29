@@ -83,16 +83,58 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
       expect(areas.has('中興新村')).toBe(true);
       expect(areas.has('草屯商圈')).toBe(true);
 
-      // 檢查南投在地獨立品牌
+      // 檢查南投在地獨立/特色品牌
       const independentStores = NANTOU_STORES.filter((s) => s.area === '南投獨立品牌');
-      expect(independentStores.length).toBe(6);
+      expect(independentStores.length).toBe(10);
       const independentNames = independentStores.map((s) => s.name);
+      expect(independentNames).toContain('黑眼荳荳');
+      expect(independentNames).toContain('92度半咖啡');
+      expect(independentNames).toContain('嶺陸手作茶飲');
+      expect(independentNames).toContain('紅茶老爹');
       expect(independentNames).toContain('微川飲料製造');
       expect(independentNames).toContain('鮮奶奶');
       expect(independentNames).toContain('曾家純蔗糖');
       expect(independentNames).toContain('三泰子 SAN TAI ZI');
       expect(independentNames).toContain('米克Q手感茶飲');
       expect(independentNames).toContain('台茶1號');
+
+      // 檢查以南投市區、南崗工業區為主的熱門連鎖分店
+      const dezhengNantou = NANTOU_STORES.find((s) => s.name.includes('得正') && s.branchName.includes('民族'));
+      expect(dezhengNantou).toBeDefined();
+      expect(dezhengNantou.phone).toBe('049-2248612');
+
+      const wanpoNantou = NANTOU_STORES.find((s) => s.name.includes('萬波') && s.branchName.includes('民族'));
+      expect(wanpoNantou).toBeDefined();
+      expect(wanpoNantou.phone).toBe('049-2202858');
+
+      const guijiNangang = NANTOU_STORES.find((s) => s.name.includes('龜記') && s.branchName.includes('南崗'));
+      expect(guijiNangang).toBeDefined();
+      expect(guijiNangang.phone).toBe('049-2247999');
+
+      const teatopNangang = NANTOU_STORES.find((s) => s.name.includes('TEA TOP') && s.branchName.includes('南崗'));
+      expect(teatopNangang).toBeDefined();
+      expect(teatopNangang.phone).toBe('049-2220901');
+
+      const teatopMinzu = NANTOU_STORES.find((s) => s.name.includes('TEA TOP') && s.branchName.includes('民族'));
+      expect(teatopMinzu).toBeDefined();
+
+      const laolaiNantou = NANTOU_STORES.find((s) => s.name.includes('老賴') && s.branchName.includes('育樂'));
+      expect(laolaiNantou).toBeDefined();
+      expect(laolaiNantou.phone).toBe('049-2227678');
+
+      const kebukeMinzu = NANTOU_STORES.find((s) => s.name.includes('可不可') && s.branchName.includes('民族'));
+      expect(kebukeMinzu).toBeDefined();
+      expect(kebukeMinzu.phone).toBe('049-2243321');
+
+      // 檢查新增之連鎖熱門門市（鮮茶道、85度C、茶之魔手）
+      const presoteaStores = NANTOU_STORES.filter((s) => s.name === '鮮茶道');
+      expect(presoteaStores.length).toBeGreaterThanOrEqual(1);
+
+      const store85c = NANTOU_STORES.filter((s) => s.name === '85度C');
+      expect(store85c.length).toBeGreaterThanOrEqual(2);
+
+      const chazhimoshou = NANTOU_STORES.filter((s) => s.name === '茶之魔手');
+      expect(chazhimoshou.length).toBeGreaterThanOrEqual(2);
 
       // 檢查同品牌不同分店（如清心福全、50嵐、可不可）
       const chingshinStores = NANTOU_STORES.filter((s) => s.name === '清心福全');
@@ -101,9 +143,9 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
       const fiftyLanStores = NANTOU_STORES.filter((s) => s.name === '50嵐');
       expect(fiftyLanStores.length).toBeGreaterThanOrEqual(2);
 
-      // 驗證每間門市皆具備必要欄位與 049 電話
+      // 驗證每間門市皆具備必要欄位與 049 或 09 手機電話
       NANTOU_STORES.forEach((store) => {
-        expect(store.phone).toMatch(/^049-/);
+        expect(store.phone).toMatch(/^(049-|09)/);
         expect(store.region).toBe('中南部價');
         expect(store.categories.length).toBeGreaterThan(0);
       });

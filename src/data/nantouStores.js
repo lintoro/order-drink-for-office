@@ -250,10 +250,298 @@ export const NANTOU_STORES = [
       { id: 'tt1_t4', name: '萬丹紅豆', price: 15 },
     ],
   },
+  {
+    id: 'store_black_eyed_peas_nantou',
+    name: '黑眼荳荳',
+    branchName: '南投彰南店',
+    phone: '049-2248279',
+    address: '南投市彰南路二段 397 號',
+    region: '中南部價',
+    area: '南投獨立品牌',
+    businessHours: '09:30 - 21:00',
+    isOpenToday: true,
+    tagline: '南投在地老字號手搖 · 辦公室特調奶茶人氣店',
+    categories: [
+      {
+        name: '人氣特調系列',
+        items: [
+          { id: 'bep_1', name: '莓好多多', priceM: 45, priceL: 55 },
+          { id: 'bep_2', name: '仙草拿鐵', priceM: 40, priceL: 50 },
+          { id: 'bep_3', name: '紫米紅豆拿鐵', priceM: 45, priceL: 55 },
+          { id: 'bep_4', name: '伯爵紅茶拿鐵', priceM: 40, priceL: 50 },
+        ],
+      },
+      {
+        name: '原淬純茶',
+        items: [
+          { id: 'bep_5', name: '四季青茶', priceM: 25, priceL: 30 },
+          { id: 'bep_6', name: '茉香綠茶', priceM: 25, priceL: 30 },
+          { id: 'bep_7', name: '阿薩姆紅茶', priceM: 25, priceL: 30 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'bep_t1', name: '珍珠', price: 10 },
+      { id: 'bep_t2', name: '手工仙草凍', price: 10 },
+      { id: 'bep_t3', name: '紫米紅豆', price: 15 },
+    ],
+  },
+  {
+    id: 'store_92half_coffee_nantou',
+    name: '92度半咖啡',
+    branchName: '南投三和號',
+    phone: '0909-227685',
+    address: '南投市三和二路 78 號',
+    region: '中南部價',
+    area: '南投獨立品牌',
+    businessHours: '07:30 - 18:00',
+    isOpenToday: true,
+    tagline: '現磨手作義式咖啡 · 辦公室醒腦外送首選 (92又1/2)',
+    categories: [
+      {
+        name: '小農厚奶咖啡',
+        items: [
+          { id: 'c92_1', name: '極厚小農拿鐵', priceM: 60, priceL: 70 },
+          { id: 'c92_2', name: '生椰拿鐵', priceM: 65, priceL: 75 },
+          { id: 'c92_3', name: '黑巧摩卡奇諾', priceM: 65, priceL: 75 },
+          { id: 'c92_4', name: '香草風味拿鐵', priceM: 60, priceL: 70 },
+        ],
+      },
+      {
+        name: '手作黑咖啡與特調',
+        items: [
+          { id: 'c92_5', name: '92 美式黑咖啡', priceM: 40, priceL: 50 },
+          { id: 'c92_6', name: '生椰美式', priceM: 55, priceL: 65 },
+          { id: 'c92_7', name: '靜岡抹茶拿鐵', priceM: 55, priceL: 65 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'c92_t1', name: '濃縮雙份 (+Shot)', price: 15 },
+      { id: 'c92_t2', name: '換燕麥奶', price: 20 },
+    ],
+  },
+  {
+    id: 'store_linglu_nantou_zhangnan',
+    name: '嶺陸手作茶飲',
+    branchName: '南投彰南店',
+    phone: '049-2244880',
+    address: '南投市彰南路二段 52 號',
+    region: '中南部價',
+    area: '南投獨立品牌',
+    businessHours: '09:30 - 21:00',
+    isOpenToday: true,
+    tagline: '南投在地手作好茶 · 現煮茶香濃厚',
+    categories: [
+      {
+        name: '嶺陸招牌茶',
+        items: [
+          { id: 'll_1', name: '嶺陸極上紅茶', priceM: 30, priceL: 35 },
+          { id: 'll_2', name: '高山烏龍青', priceM: 30, priceL: 35 },
+          { id: 'll_3', name: '茉香綠茶', priceM: 30, priceL: 35 },
+        ],
+      },
+      {
+        name: '手作鮮奶與特調',
+        items: [
+          { id: 'll_4', name: '嶺陸鮮奶茶', priceM: 50, priceL: 60 },
+          { id: 'll_5', name: '波霸厚鮮奶', priceM: 55, priceL: 65 },
+          { id: 'll_6', name: '翡翠檸檬綠', priceM: 45, priceL: 55 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'll_t1', name: '波霸珍珠', price: 10 },
+      { id: 'll_t2', name: '椰果', price: 10 },
+      { id: 'll_t3', name: '茶凍', price: 10 },
+    ],
+  },
+  {
+    id: 'store_mrblacktea_nantou_fuxing',
+    name: '紅茶老爹',
+    branchName: '南投復興店',
+    phone: '049-2233231',
+    address: '南投市崇文里復興路 138 號',
+    region: '中南部價',
+    area: '南投獨立品牌',
+    businessHours: '10:00 - 21:00',
+    isOpenToday: true,
+    tagline: '古早味決明子紅茶 · 銅板價大容量好茶',
+    categories: [
+      {
+        name: '老爹招牌紅茶',
+        items: [
+          { id: 'mbt_1', name: '老爹招牌紅茶', priceM: 25, priceL: 30 },
+          { id: 'mbt_2', name: '決明大麥紅茶', priceM: 25, priceL: 30 },
+          { id: 'mbt_3', name: '特級綠茶', priceM: 25, priceL: 30 },
+        ],
+      },
+      {
+        name: '濃厚特調與奶茶',
+        items: [
+          { id: 'mbt_4', name: '老爹鮮奶茶', priceM: 45, priceL: 55 },
+          { id: 'mbt_5', name: '珍珠奶茶', priceM: 40, priceL: 50 },
+          { id: 'mbt_6', name: '冬瓜檸檬', priceM: 35, priceL: 45 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'mbt_t1', name: '珍珠', price: 10 },
+      { id: 'mbt_t2', name: '椰果', price: 10 },
+    ],
+  },
 
   // ==========================================
   // 一、南投市區 (連鎖手搖)
   // ==========================================
+  {
+    id: 'store_dezheng_nantou_minzu',
+    name: '得正 Oolong TEA Project',
+    branchName: '南投民族計劃',
+    phone: '049-2248612',
+    address: '南投市民族路 276 號',
+    region: '中南部價',
+    area: '南投市區',
+    businessHours: '10:00 - 20:30',
+    isOpenToday: true,
+    tagline: '南投民族計劃門市 · 辦公室烏龍茶首選',
+    categories: [
+      {
+        name: '原茶系列',
+        items: [
+          { id: 'dzn_1', name: '春烏龍', priceM: 30, priceL: 35 },
+          { id: 'dzn_2', name: '焙烏龍', priceM: 30, priceL: 35 },
+          { id: 'dzn_3', name: '紅茶', priceM: 30, priceL: 35 },
+        ],
+      },
+      {
+        name: '鮮奶茶系列',
+        items: [
+          { id: 'dzn_4', name: '春烏龍鮮奶', priceM: 55, priceL: 65 },
+          { id: 'dzn_5', name: '焙烏龍鮮奶', priceM: 55, priceL: 65 },
+          { id: 'dzn_6', name: '紅茶鮮奶', priceM: 55, priceL: 65 },
+        ],
+      },
+      {
+        name: '芝士奶蓋系列',
+        items: [
+          { id: 'dzn_7', name: '芝士春烏龍', priceM: 50, priceL: 60 },
+          { id: 'dzn_8', name: '芝士焙烏龍', priceM: 50, priceL: 60 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'dzn_t1', name: '黃金珍珠', price: 10 },
+      { id: 'dzn_t2', name: '焙烏龍茶凍', price: 10 },
+      { id: 'dzn_t3', name: '雙料 (珍珠+茶凍)', price: 15 },
+    ],
+  },
+  {
+    id: 'store_wanpo_nantou_minzu',
+    name: '萬波島嶼紅茶',
+    branchName: '南投民族店',
+    phone: '049-2202858',
+    address: '南投市民族路 140 號',
+    region: '中南部價',
+    area: '南投市區',
+    businessHours: '10:00 - 21:00',
+    isOpenToday: true,
+    tagline: '南投民族路眷村古早味 · 紅豆粉粿鮮奶名店',
+    categories: [
+      {
+        name: '島嶼純茶',
+        items: [
+          { id: 'wpn_1', name: '島嶼紅茶', priceM: 30, priceL: 35 },
+          { id: 'wpn_2', name: '蘭香綠茶', priceM: 30, priceL: 35 },
+          { id: 'wpn_3', name: '阿里山青心烏龍', priceM: 30, priceL: 35 },
+        ],
+      },
+      {
+        name: '古早招牌特調',
+        items: [
+          { id: 'wpn_4', name: '紅豆粉粿鮮奶', priceM: 65, priceL: 75 },
+          { id: 'wpn_5', name: '金萱珍波粉', priceM: 45, priceL: 50 },
+          { id: 'wpn_6', name: '蘭香鮮奶茶', priceM: 55, priceL: 65 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'wpn_t1', name: '黑波霸', price: 10 },
+      { id: 'wpn_t2', name: '粉粿', price: 15 },
+      { id: 'wpn_t3', name: '愛玉', price: 10 },
+    ],
+  },
+  {
+    id: 'store_laolai_nantou_yule',
+    name: '老賴茶棧',
+    branchName: '南投育樂店',
+    phone: '049-2227678',
+    address: '南投市育樂路 97 號',
+    region: '中南部價',
+    area: '南投市區',
+    businessHours: '09:30 - 21:30',
+    isOpenToday: true,
+    tagline: '台中第二市場發跡名店 · 豆香紅茶與招牌太極',
+    categories: [
+      {
+        name: '老賴招牌',
+        items: [
+          { id: 'llz_1', name: '老賴紅茶', priceM: 30, priceL: 35 },
+          { id: 'llz_2', name: '豆香紅茶 (豆漿紅茶)', priceM: 35, priceL: 40 },
+          { id: 'llz_3', name: '太極冬瓜茶', priceM: 35, priceL: 40 },
+          { id: 'llz_4', name: '青霧綠茶', priceM: 30, priceL: 35 },
+        ],
+      },
+      {
+        name: '鮮奶與厚乳',
+        items: [
+          { id: 'llz_5', name: '太極厚奶', priceM: 55, priceL: 65 },
+          { id: 'llz_6', name: '招牌奶茶', priceM: 45, priceL: 55 },
+          { id: 'llz_7', name: '黑糖珍珠鮮奶', priceM: 60, priceL: 70 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'llz_t1', name: '珍珠', price: 10 },
+      { id: 'llz_t2', name: '胚芽', price: 10 },
+      { id: 'llz_t3', name: '太極 (珍+椰)', price: 15 },
+    ],
+  },
+  {
+    id: 'store_teatop_nantou_minzu',
+    name: 'TEA TOP 第一味',
+    branchName: '南投民族店',
+    phone: '049-2220901',
+    address: '南投市民族路 137 號',
+    region: '中南部價',
+    area: '南投市區',
+    businessHours: '09:00 - 21:30',
+    isOpenToday: true,
+    tagline: '南投民族路茶師名茶 · 當代雙Q與日月潭紅',
+    categories: [
+      {
+        name: '高山好茶',
+        items: [
+          { id: 'ttm_1', name: '招牌高山青', priceM: 30, priceL: 35 },
+          { id: 'ttm_2', name: '日月潭紅茶', priceM: 35, priceL: 40 },
+          { id: 'ttm_3', name: '冬瓜檸檬青', priceM: 45, priceL: 55 },
+        ],
+      },
+      {
+        name: '雙Q與鮮奶茶',
+        items: [
+          { id: 'ttm_4', name: '當代雙Q (珍珠+芋圓)', priceM: 45, priceL: 55 },
+          { id: 'ttm_5', name: '靚奶茶', priceM: 45, priceL: 55 },
+          { id: 'ttm_6', name: '大吉嶺鮮奶茶', priceM: 55, priceL: 65 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'ttm_t1', name: '波霸粉圓', price: 10 },
+      { id: 'ttm_t2', name: '小芋圓', price: 10 },
+      { id: 'ttm_t3', name: '茶凍', price: 10 },
+    ],
+  },
   {
     id: 'store_ug_nantou_fuxing',
     name: 'UG 樂己',
@@ -626,10 +914,174 @@ export const NANTOU_STORES = [
     ],
     toppings: TOPPINGS_COMMON,
   },
+  {
+    id: 'store_presotea_nantou_zhangnan',
+    name: '鮮茶道',
+    branchName: '南投彰南店',
+    phone: '049-2248762',
+    address: '南投市彰南路一段 1112 號',
+    region: '中南部價',
+    area: '南投市區',
+    businessHours: '09:15 - 20:45',
+    isOpenToday: true,
+    tagline: '高壓現萃茶 · 滿百即可外送 · 買十送一',
+    categories: [
+      {
+        name: '現萃好茶',
+        items: [
+          { id: 'pt_1', name: '阿里山冰茶', priceM: 35, priceL: 40 },
+          { id: 'pt_2', name: '四季春茶', priceM: 30, priceL: 35 },
+          { id: 'pt_3', name: '伯爵紅茶', priceM: 30, priceL: 35 },
+        ],
+      },
+      {
+        name: '鮮奶與招牌特調',
+        items: [
+          { id: 'pt_4', name: '熊貓珍珠奶茶', priceM: 45, priceL: 55 },
+          { id: 'pt_5', name: '焙茶烤奶', priceM: 50, priceL: 60 },
+          { id: 'pt_6', name: '紅心芭樂梅', priceM: 50, priceL: 60 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'pt_t1', name: '熊貓珍珠 (黑+白)', price: 10 },
+      { id: 'pt_t2', name: '椰果', price: 10 },
+      { id: 'pt_t3', name: '寒天晶球', price: 15 },
+    ],
+  },
+  {
+    id: 'store_85c_nantou_datong',
+    name: '85度C',
+    branchName: '南投大同店',
+    phone: '049-2200052',
+    address: '南投市大同南街 109 號',
+    region: '中南部價',
+    area: '南投市區',
+    businessHours: '07:30 - 23:00',
+    isOpenToday: true,
+    tagline: '咖啡蛋糕烘焙專賣 · 辦公室下午茶首選',
+    categories: [
+      {
+        name: '經典咖啡',
+        items: [
+          { id: '85dt_1', name: '海岩咖啡', priceM: 55, priceL: 65 },
+          { id: '85dt_2', name: '招牌拿鐵咖啡', priceM: 65, priceL: 75 },
+          { id: '85dt_3', name: '美式咖啡', priceM: 45, priceL: 55 },
+        ],
+      },
+      {
+        name: '人氣茶飲',
+        items: [
+          { id: '85dt_4', name: '一顆檸檬紅茶', priceM: 55, priceL: 65 },
+          { id: '85dt_5', name: '海岩青茶', priceM: 40, priceL: 50 },
+          { id: '85dt_6', name: '黑糖珍珠鮮奶', priceM: 55, priceL: 65 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: '85dt_t1', name: '珍珠', price: 10 },
+      { id: '85dt_t2', name: '椰果', price: 10 },
+    ],
+  },
+  {
+    id: 'store_chazhimoshou_nantou_minzu',
+    name: '茶之魔手',
+    branchName: '南投民族店',
+    phone: '049-2222700',
+    address: '南投市民族路 9 號',
+    region: '中南部價',
+    area: '南投市區',
+    businessHours: '09:00 - 21:30',
+    isOpenToday: true,
+    tagline: '南投民族路老字號 · 平價大杯首選',
+    categories: [
+      {
+        name: '經典好茶',
+        items: [
+          { id: 'czmm_1', name: '青梅青茶', priceM: 35, priceL: 40 },
+          { id: 'czmm_2', name: '山茶花綠茶', priceM: 30, priceL: 35 },
+          { id: 'czmm_3', name: '藍莓凍奶茶', priceM: 45, priceL: 50 },
+          { id: 'czmm_4', name: '波霸奶茶', priceM: 40, priceL: 45 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'czmm_t1', name: '波霸', price: 5 },
+      { id: 'czmm_t2', name: '藍莓凍', price: 10 },
+    ],
+  },
 
   // ==========================================
   // 二、南崗工業區周邊
   // ==========================================
+  {
+    id: 'store_guiji_nantou_nangang',
+    name: '龜記茗品',
+    branchName: '南投南崗店',
+    phone: '049-2247999',
+    address: '南投市南崗二路 340 號',
+    region: '中南部價',
+    area: '南崗工業區',
+    businessHours: '10:00 - 21:00',
+    isOpenToday: true,
+    tagline: '南崗二路工業區外送主力 · 紅柚翡翠名店',
+    categories: [
+      {
+        name: '鮮果茶系列',
+        items: [
+          { id: 'gjn_1', name: '紅柚翡翠', priceM: 65, priceL: 75 },
+          { id: 'gjn_2', name: '蘋果紅萱', priceM: 50, priceL: 60 },
+          { id: 'gjn_3', name: '柳橙翡翠', priceM: 60, priceL: 70 },
+        ],
+      },
+      {
+        name: '古早原味純茶',
+        items: [
+          { id: 'gjn_4', name: '三十三茶王', priceM: 35, priceL: 40 },
+          { id: 'gjn_5', name: '極品紅茶', priceM: 30, priceL: 35 },
+          { id: 'gjn_6', name: '濃乳茶', priceM: 55, priceL: 65 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'gjn_t1', name: '蘆薈', price: 15 },
+      { id: 'gjn_t2', name: '珍珠', price: 10 },
+    ],
+  },
+  {
+    id: 'store_teatop_nantou_nangang',
+    name: 'TEA TOP 第一味',
+    branchName: '南投南崗店',
+    phone: '049-2220901',
+    address: '南投市南崗二路 306 號',
+    region: '中南部價',
+    area: '南崗工業區',
+    businessHours: '09:00 - 21:00',
+    isOpenToday: true,
+    tagline: '南崗二路工業區快速外送門市',
+    categories: [
+      {
+        name: '高山好茶',
+        items: [
+          { id: 'ttng_1', name: '招牌高山青', priceM: 30, priceL: 35 },
+          { id: 'ttng_2', name: '日月潭紅茶', priceM: 35, priceL: 40 },
+          { id: 'ttng_3', name: '冬瓜檸檬青', priceM: 45, priceL: 55 },
+        ],
+      },
+      {
+        name: '雙Q與鮮奶茶',
+        items: [
+          { id: 'ttng_4', name: '當代雙Q (珍珠+芋圓)', priceM: 45, priceL: 55 },
+          { id: 'ttng_5', name: '靚奶茶', priceM: 45, priceL: 55 },
+          { id: 'ttng_6', name: '大吉嶺鮮奶茶', priceM: 55, priceL: 65 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'ttng_t1', name: '波霸粉圓', price: 10 },
+      { id: 'ttng_t2', name: '小芋圓', price: 10 },
+    ],
+  },
   {
     id: 'store_chingshin_nangang',
     name: '清心福全',
@@ -656,6 +1108,42 @@ export const NANTOU_STORES = [
     toppings: [
       { id: 'csng_t1', name: '珍珠', price: 10 },
       { id: 'csng_t2', name: '椰果', price: 10 },
+    ],
+  },
+  {
+    id: 'store_chazhimoshou_nangang',
+    name: '茶之魔手',
+    branchName: '南投南崗店',
+    phone: '049-2233999',
+    address: '南投市南崗二路 332 號',
+    region: '中南部價',
+    area: '南崗工業區',
+    businessHours: '08:30 - 21:30',
+    isOpenToday: true,
+    tagline: '南崗工業區廠區外送霸主 · 早上8:30營業',
+    categories: [
+      {
+        name: '招牌魔手茶',
+        items: [
+          { id: 'czm_1', name: '青梅青茶', priceM: 35, priceL: 40 },
+          { id: 'czm_2', name: '山茶花無糖綠', priceM: 30, priceL: 35 },
+          { id: 'czm_3', name: '台灣純青茶', priceM: 25, priceL: 30 },
+          { id: 'czm_4', name: '阿薩姆紅茶', priceM: 25, priceL: 30 },
+        ],
+      },
+      {
+        name: '特調與凍奶',
+        items: [
+          { id: 'czm_5', name: '藍莓凍奶茶', priceM: 45, priceL: 50 },
+          { id: 'czm_6', name: '波霸奶茶', priceM: 40, priceL: 45 },
+          { id: 'czm_7', name: '冬瓜青茶', priceM: 30, priceL: 35 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'czm_t1', name: '波霸', price: 5 },
+      { id: 'czm_t2', name: '藍莓凍', price: 10 },
+      { id: 'czm_t3', name: '椰果', price: 5 },
     ],
   },
 
@@ -719,6 +1207,38 @@ export const NANTOU_STORES = [
       },
     ],
     toppings: TOPPINGS_COMMON,
+  },
+  {
+    id: 'store_85c_nantou_zhongxing',
+    name: '85度C',
+    branchName: '南投中興店',
+    phone: '049-2390885',
+    address: '南投市中學西路 42-1 號',
+    region: '中南部價',
+    area: '中興新村',
+    businessHours: '07:00 - 21:30',
+    isOpenToday: true,
+    tagline: '中興新村辦公室下午茶首選 · 滿200即外送',
+    categories: [
+      {
+        name: '經典咖啡',
+        items: [
+          { id: '85zx_1', name: '海岩咖啡', priceM: 55, priceL: 65 },
+          { id: '85zx_2', name: '招牌拿鐵咖啡', priceM: 65, priceL: 75 },
+          { id: '85zx_3', name: '美式咖啡', priceM: 45, priceL: 55 },
+        ],
+      },
+      {
+        name: '人氣茶飲',
+        items: [
+          { id: '85zx_4', name: '一顆檸檬青茶', priceM: 55, priceL: 65 },
+          { id: '85zx_5', name: '海岩綠茶', priceM: 40, priceL: 50 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: '85zx_t1', name: '珍珠', price: 10 },
+    ],
   },
 
   // ==========================================

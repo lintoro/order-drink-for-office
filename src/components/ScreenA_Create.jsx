@@ -621,7 +621,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
                 )}
 
                 {/* 2. 南投在地獨立/自創品牌 */}
-                <optgroup label="✨ 南投在地獨立品牌 (微川/鮮奶奶/曾家/三泰子/米克Q/台茶1號)">
+                <optgroup label="✨ 南投在地獨立/特色品牌 (黑眼荳荳/92度半/嶺陸/老爹/微川/鮮奶奶/曾家/三泰子/米克Q/台茶1號)">
                   {DEFAULT_STORES.filter((s) => s.area === '南投獨立品牌' && !hiddenStoreIds.includes(s.id)).map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} ({s.branchName}) · 📞 {s.phone}
