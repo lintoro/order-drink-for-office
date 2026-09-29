@@ -131,7 +131,7 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
       expect(presoteaStores.length).toBeGreaterThanOrEqual(1);
 
       const store85c = NANTOU_STORES.filter((s) => s.name === '85度C');
-      expect(store85c.length).toBeGreaterThanOrEqual(2);
+      expect(store85c.length).toBeGreaterThanOrEqual(3);
 
       const chazhimoshou = NANTOU_STORES.filter((s) => s.name === '茶之魔手');
       expect(chazhimoshou.length).toBeGreaterThanOrEqual(2);
@@ -142,6 +142,13 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
 
       const fiftyLanStores = NANTOU_STORES.filter((s) => s.name === '50嵐');
       expect(fiftyLanStores.length).toBeGreaterThanOrEqual(2);
+
+      // 檢查李記紅茶冰 (南投彰南店、南崗店、草屯中正店)
+      const lijiStores = NANTOU_STORES.filter((s) => s.name.includes('李記紅茶冰'));
+      expect(lijiStores.length).toBeGreaterThanOrEqual(3);
+      const lijiNangang = lijiStores.find((s) => s.area === '南崗工業區');
+      expect(lijiNangang).toBeDefined();
+      expect(lijiNangang.phone).toBe('0958-429003');
 
       // 檢查水云茶堂、吳家紅茶冰、紅茶老爹、紅茶媽媽
       const shuiyunStores = NANTOU_STORES.filter((s) => s.name.includes('水云茶堂'));

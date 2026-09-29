@@ -1096,6 +1096,50 @@ export const NANTOU_STORES = [
       { id: 'wj_t3', name: '仙草凍', price: 10 },
     ],
   },
+  {
+    id: 'store_liji_nantou_zhangnan',
+    name: '李記紅茶冰',
+    branchName: '南投彰南店',
+    phone: '0902-268707',
+    address: '南投市三和三路 18 號',
+    region: '中南部價',
+    area: '南投市區',
+    businessHours: '10:30 - 21:30',
+    isOpenToday: true,
+    tagline: '古早味純糖熬煮紅茶冰 · 超大杯消暑首選',
+    categories: [
+      {
+        name: '招牌古早味',
+        items: [
+          { id: 'lj_1', name: '古早味紅茶冰', priceM: 25, priceL: 30 },
+          { id: 'lj_2', name: '決明大麥茶', priceM: 25, priceL: 30 },
+          { id: 'lj_3', name: '茉香綠茶', priceM: 25, priceL: 30 },
+          { id: 'lj_4', name: '台灣青茶', priceM: 25, priceL: 30 },
+        ],
+      },
+      {
+        name: '香醇奶茶與厚鮮奶',
+        items: [
+          { id: 'lj_5', name: '古早味奶茶', priceM: 35, priceL: 45 },
+          { id: 'lj_6', name: '鮮奶紅茶 (拿鐵)', priceM: 50, priceL: 60 },
+          { id: 'lj_7', name: '豆漿紅茶', priceM: 35, priceL: 45 },
+        ],
+      },
+      {
+        name: '古早冬瓜與果香',
+        items: [
+          { id: 'lj_8', name: '冬瓜檸檬', priceM: 40, priceL: 50 },
+          { id: 'lj_9', name: '檸檬紅茶', priceM: 40, priceL: 50 },
+          { id: 'lj_10', name: '冰淇淋紅茶', priceM: 45, priceL: 55 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'lj_t1', name: '波霸珍珠', price: 10 },
+      { id: 'lj_t2', name: '椰果', price: 10 },
+      { id: 'lj_t3', name: '古早味粉條', price: 10 },
+    ],
+  },
 
   // ==========================================
   // 二、南崗工業區周邊
@@ -1274,6 +1318,35 @@ export const NANTOU_STORES = [
       { id: 'mm_t1', name: '珍珠', price: 10 },
       { id: 'mm_t2', name: '椰果', price: 10 },
       { id: 'mm_t3', name: '嫩仙草', price: 10 },
+    ],
+  },
+  {
+    id: 'store_liji_nantou_nangang',
+    name: '李記紅茶冰',
+    branchName: '南崗店',
+    phone: '0958-429003',
+    address: '南投市新興里南崗三路 144 號',
+    region: '中南部價',
+    area: '南崗工業區',
+    businessHours: '09:00 - 20:30',
+    isOpenToday: true,
+    tagline: '南崗三路工業區超大杯紅茶冰 · 工廠外送提神首選',
+    categories: [
+      {
+        name: '廠區解渴大杯系列',
+        items: [
+          { id: 'ljng_1', name: '古早味紅茶冰', priceM: 25, priceL: 30 },
+          { id: 'ljng_2', name: '決明大麥茶', priceM: 25, priceL: 30 },
+          { id: 'ljng_3', name: '台灣青茶', priceM: 25, priceL: 30 },
+          { id: 'ljng_4', name: '古早味奶茶', priceM: 35, priceL: 45 },
+          { id: 'ljng_5', name: '冬瓜檸檬', priceM: 40, priceL: 50 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'ljng_t1', name: '波霸珍珠', price: 10 },
+      { id: 'ljng_t2', name: '椰果', price: 10 },
+      { id: 'ljng_t3', name: '古早味粉條', price: 10 },
     ],
   },
 
@@ -1689,5 +1762,65 @@ export const NANTOU_STORES = [
       { id: 'mmct_t2', name: '椰果', price: 10 },
       { id: 'mmct_t3', name: '嫩仙草', price: 10 },
     ],
+  },
+  {
+    id: 'store_liji_caotun_zhongzheng',
+    name: '李記紅茶冰',
+    branchName: '草屯中正店',
+    phone: '049-2565869',
+    address: '草屯鎮南埔里中正路 259-2 號',
+    region: '中南部價',
+    area: '草屯商圈',
+    businessHours: '09:00 - 21:00',
+    isOpenToday: true,
+    tagline: '草屯超大杯古早味紅茶冰 · 滿額外送',
+    categories: [
+      {
+        name: '招牌古早味',
+        items: [
+          { id: 'ljct_1', name: '古早味紅茶冰', priceM: 25, priceL: 30 },
+          { id: 'ljct_2', name: '決明大麥茶', priceM: 25, priceL: 30 },
+          { id: 'ljct_3', name: '古早味奶茶', priceM: 35, priceL: 45 },
+          { id: 'ljct_4', name: '冬瓜檸檬', priceM: 40, priceL: 50 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'ljct_t1', name: '波霸珍珠', price: 10 },
+      { id: 'ljct_t2', name: '椰果', price: 10 },
+      { id: 'ljct_t3', name: '古早味粉條', price: 10 },
+    ],
+  },
+  {
+    id: 'store_85c_caotun_zhongshan',
+    name: '85度C',
+    branchName: '草屯中山店',
+    phone: '049-2328123',
+    address: '草屯鎮碧山路 159-1 號',
+    region: '中南部價',
+    area: '草屯商圈',
+    businessHours: '07:00 - 22:30',
+    isOpenToday: true,
+    tagline: '草屯碧山路商圈咖啡烘焙 · 辦公室下午茶蛋糕專賣',
+    categories: [
+      {
+        name: '人氣咖啡',
+        items: [
+          { id: '85ct_1', name: '美式咖啡', priceM: 55, priceL: 65 },
+          { id: '85ct_2', name: '招牌咖啡', priceM: 60, priceL: 75 },
+          { id: '85ct_3', name: '拿鐵咖啡', priceM: 75, priceL: 90 },
+        ],
+      },
+      {
+        name: '人氣好茶與奶茶',
+        items: [
+          { id: '85ct_4', name: '海岩紅茶', priceM: 40, priceL: 50 },
+          { id: '85ct_5', name: '海岩青茶', priceM: 40, priceL: 50 },
+          { id: '85ct_6', name: '一顆檸檬紅茶', priceM: 55, priceL: 65 },
+          { id: '85ct_7', name: '黑糖珍珠鮮奶', priceM: 60, priceL: 70 },
+        ],
+      },
+    ],
+    toppings: TOPPINGS_COMMON,
   },
 ];
