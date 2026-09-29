@@ -37,7 +37,7 @@ export function subscribeToGroup(orderId, onDataUpdated) {
   // 1. 若 Firebase 雲端可用，啟動 Firestore 即時監聽
   if (getFirebaseDb()) {
     const unsubscribeCloud = subscribeGroupDoc(orderId, (cloudData) => {
-      saveGroupOrder(cloudData); // 同步鏡像至本機備份
+      saveGroupOrder(cloudData, false); // 同步鏡像至本機備份 (不登記主揪權限)
       onDataUpdated(cloudData, 'cloud');
     });
 
@@ -56,7 +56,7 @@ export function subscribeToGroup(orderId, onDataUpdated) {
         if (res.ok) {
           const cloudData = await res.json();
           if (cloudData && cloudData.orderId) {
-            saveGroupOrder(cloudData);
+            saveGroupOrder(cloudData, false); // 同步鏡像至本機備份 (不登記主揪權限)
             onDataUpdated(cloudData, 'cloud');
           }
         }
@@ -93,9 +93,9 @@ export function subscribeToGroup(orderId, onDataUpdated) {
 /**
  * 儲存/開團
  */
-export async function syncSaveGroup(groupData) {
-  // 優先存本機
-  saveGroupOrder(groupData);
+export async function syncSaveGroup(groupData, isHost = false) {
+  // 優先存本機 (僅在明確為開團主揪時記錄主揪 Token)
+  saveGroupOrder(groupData, isHost);
 
   // 1. 推送至 Firebase
   if (getFirebaseDb()) {
@@ -125,8 +125,8 @@ export async function syncSaveGroup(groupData) {
  * 更新團購訂單或狀態
  */
 export async function syncUpdateGroup(orderId, fullGroupData) {
-  // 更新本機
-  saveGroupOrder(fullGroupData);
+  // 更新本機 (不強制註冊主揪 Token)
+  saveGroupOrder(fullGroupData, false);
 
   // 1. 推送至 Firebase
   if (getFirebaseDb()) {

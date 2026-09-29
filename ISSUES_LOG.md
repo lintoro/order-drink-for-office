@@ -105,6 +105,24 @@
   3. `ScreenC_Admin` 亦增加「👀 前往同事點餐頁面」雙向按鈕，提供主揪無縫切換。
 - **後續防範 (Prevention)**：在事件回呼中凡傳遞給 `setState` 之函式，嚴禁直接裸傳至 `onClick`，避免事件物件污染狀態。
 
+### [ISSUE-009] 被邀請訂購同事誤獲主揪管理後台權限漏洞
+- **發生日期**：2026-09-29
+- **涉及模組**：`App.jsx`, `storage.js`, `syncService.js`
+- **問題現象**：主揪將公開填單連結分享給同仁後，同仁手機或電腦點開，頂部竟然顯示「進入主揪管理後台」黃色入口，且同仁能直接進入主揪後台控制結單、修改外送費甚至核銷他人帳目。
+- **根本原因 (Root Cause)**：
+  1. `App.jsx` 在判定 `isUserTheAdmin` 時，原先含有 `const localAdminToken = groupData?.adminToken || ...` 回退邏輯。當同仁設備從 Cloudflare KV 雲端拉取包含 `adminToken` 的 `groupData` 時，同仁設備的本機變數被賦值了主揪 Token。隨後 `localAdminToken === groupData?.adminToken` 判定為 `true`，導致所有拉取雲端團購資料的同仁全部被認證為主揪。
+  2. `storage.js` 的 `saveGroupOrder` 預設在每次儲存時無差別呼叫 `saveAdminToken`，導致雲端資料同步至同仁本機 `localStorage` 時，直接將主揪 Token 寫入同仁設備儲存區。
+- **解決方案 (Solution)**：
+  1. **權限雙向嚴格阻斷**：
+     - 重構 `isUserTheAdmin` 判定邏輯：真實身分來源僅限於「本機 `localStorage` 且為原初開團者登記之憑證」或「URL 明確帶有 `&token=adm_xxx` 且吻合」。徹底移除任何從 `groupData.adminToken` 倒灌提取身分的可能。
+  2. **儲存防提權隔離**：
+     - `saveGroupOrder(orderData, isHost = true)` 新增 `isHost` 旗標。
+     - `syncService.js` 同步監聽 (`subscribeToGroup`) 與點餐送單 (`syncUpdateGroup`) 在儲存雲端資料至本機時，強制傳入 `isHost = false`，嚴禁同仁設備本機寫入主揪 Token。
+  3. **介面權限隔離**：
+     - `ScreenB_UserOrder` 的「進入主揪管理後台」捷徑按鈕僅在 `isAuthorized === true` 時渲染，一般同仁完全不可見。
+     - 若同仁手動在網址上試圖跳轉至 `ScreenC_Admin`，因 `isAuthorized === false` 亦會被全螢幕安全攔截卡片阻擋，杜絕未授權進入。
+- **後續防範 (Prevention)**：在 `tests/services.test.js` 中新增自動化單元測試，模擬雲端資料拉取並驗證本機 Token 絕對不被寫入（`getAdminToken` 返回 null）。
+
 ---
 
 *（後續開發過程中的問題將持續追加於此）*

@@ -5,7 +5,7 @@ import ScreenA_Create from './components/ScreenA_Create';
 import ScreenB_UserOrder from './components/ScreenB_UserOrder';
 import ScreenC_Admin from './components/ScreenC_Admin';
 import Modal_HistoryArchives from './components/Modal_HistoryArchives';
-import { getGroupOrder, saveGroupOrder, clearGroupOrder, archiveGroupOrder, getAdminToken } from './utils/storage';
+import { getGroupOrder, saveGroupOrder, clearGroupOrder, archiveGroupOrder, getAdminToken, saveAdminToken } from './utils/storage';
 import { subscribeToGroup, syncSaveGroup, syncUpdateGroup, isCloudModeEnabled } from './services/syncService';
 import { DEFAULT_STORES } from './data/defaultStores';
 import { generateAdminToken } from './utils/calc';
@@ -102,13 +102,26 @@ export default function App() {
     setCurrentView('create');
   };
 
-  // 本機儲存之主揪 token 記憶 (支援多團主揪 Token 字典)
+  // 本機儲存之主揪 token 記憶 (嚴格僅能從當前本機 LocalStorage 讀取，絕不可使用 groupData.adminToken 回退)
   const currentOrderId = urlOrderId || groupData?.orderId;
-  const localAdminToken = groupData?.adminToken || (currentOrderId ? getAdminToken(currentOrderId) : null);
-  const isUserTheAdmin =
-    (urlToken && urlToken === groupData?.adminToken) ||
-    (urlToken && urlToken === localAdminToken) ||
-    (!urlToken && localAdminToken && localAdminToken === groupData?.adminToken);
+  const localSavedAdminToken = currentOrderId ? getAdminToken(currentOrderId) : null;
+  const expectedAdminToken = groupData?.adminToken || localSavedAdminToken;
+
+  // 主揪身分嚴格判定 (僅有以下兩種合法途徑)：
+  // 1. 網址列帶有正確的主揪專屬 Token (?token=adm_xxx) 且與本團 adminToken 吻合
+  // 2. 當前瀏覽器設備是最初開團的設備 (本機 LocalStorage 存有該團之 adminToken)，且與本團 adminToken 吻合
+  const isUserTheAdmin = Boolean(
+    expectedAdminToken &&
+      ((urlToken && urlToken === expectedAdminToken) ||
+        (localSavedAdminToken && localSavedAdminToken === expectedAdminToken))
+  );
+
+  // 若使用者持合法的 urlToken 造訪，自動在本機記住主揪身分，方便日後免 Token 直達後台
+  useEffect(() => {
+    if (urlToken && expectedAdminToken && urlToken === expectedAdminToken && currentOrderId) {
+      saveAdminToken(currentOrderId, urlToken);
+    }
+  }, [urlToken, expectedAdminToken, currentOrderId]);
 
   // 訂閱資料同步 (Firebase 雲端 或 本機跨分頁)
   useEffect(() => {
@@ -134,11 +147,19 @@ export default function App() {
     await syncUpdateGroup(newGroup.orderId, newGroup);
   };
 
-  // 開團成功
+  // 開團成功 (僅開團主揪本人會觸發)
   const handleGroupCreated = async (newGroup) => {
     setGroupData(newGroup);
-    await syncSaveGroup(newGroup);
-    // 開團後導至管理頁
+    if (newGroup.adminToken && newGroup.orderId) {
+      saveAdminToken(newGroup.orderId, newGroup.adminToken);
+    }
+    await syncSaveGroup(newGroup, true);
+    // 開團後導至管理頁，並在網址列附帶專屬 Token
+    window.history.pushState(
+      {},
+      '',
+      `?order=${newGroup.orderId}&token=${newGroup.adminToken}`
+    );
     setCurrentView('admin');
   };
 

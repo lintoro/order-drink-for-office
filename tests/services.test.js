@@ -73,6 +73,24 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
       removeDeviceNickname('grp_test', '小明');
       expect(getDeviceNicknames('grp_test')).toEqual(['小華']);
     });
+
+    it('普通同仁設備同步雲端團購時，絕不記錄主揪 Token (isHost = false 防提權)', () => {
+      const cloudGroup = {
+        orderId: 'grp_cloud_security',
+        storeName: '輕之茶',
+        adminToken: 'super_secret_token_123',
+        orders: [],
+      };
+
+      // 普通同仁設備從雲端載入 (isHost = false)
+      saveGroupOrder(cloudGroup, false);
+
+      // 團購內容正常載入可點餐
+      expect(getGroupOrder('grp_cloud_security').storeName).toBe('輕之茶');
+
+      // 但同仁本機絕對不能存有主揪 Token！
+      expect(getAdminToken('grp_cloud_security')).toBeNull();
+    });
   });
 
   // 0-B. 歷史結案歸檔庫存取測試 (需求 4)

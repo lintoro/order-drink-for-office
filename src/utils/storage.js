@@ -59,7 +59,7 @@ export function getAllActiveGroups() {
 }
 
 // 儲存或更新團購資料 (依 orderId 隔離，互不踩踏)
-export function saveGroupOrder(orderData) {
+export function saveGroupOrder(orderData, isHost = true) {
   if (!orderData || !orderData.orderId) return false;
   try {
     // 1. 獨立儲存該團
@@ -75,8 +75,8 @@ export function saveGroupOrder(orderData) {
       localStorage.setItem(STORAGE_KEYS.ACTIVE_IDS, JSON.stringify(idList.slice(0, 20)));
     }
 
-    // 4. 若有主揪 Token，記錄至 Token 字典
-    if (orderData.adminToken) {
+    // 4. 嚴格防護：只有明確是開團主揪 (isHost = true) 時，才在本機登記主揪 Token
+    if (orderData.adminToken && isHost) {
       saveAdminToken(orderData.orderId, orderData.adminToken);
     }
 
