@@ -1,10 +1,28 @@
 /**
  * Google Gemini Flash 菜單影像辨識服務 (geminiService.js)
- * 專為台灣手搖飲菜單設計之 Structured Output 結構化辨識
+ * 預設升級支援最新世代 Google Gemini 3.8 Flash 模型 (具備結構化 JSON 輸出)
  */
 
-const GEMINI_API_ENDPOINT =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+export const SUPPORTED_MODELS = [
+  { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash (最新世代，速度與精準度最優)' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (穩定備援版本)' },
+  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (舊版相容)' },
+];
+
+/**
+ * 取得當前設定之 Gemini 模型名稱 (預設最新 gemini-3.8-flash)
+ */
+export function getGeminiModel() {
+  return localStorage.getItem('drink_order_gemini_model') || 'gemini-3.8-flash';
+}
+
+export function setGeminiModel(modelId) {
+  if (modelId && modelId.trim()) {
+    localStorage.setItem('drink_order_gemini_model', modelId.trim());
+  } else {
+    localStorage.removeItem('drink_order_gemini_model');
+  }
+}
 
 /**
  * 取得當前有效的 Gemini API Key (優先從 LocalStorage 讀取，其次從環境變數讀取)
@@ -131,18 +149,30 @@ export async function parseMenuImageWithGemini(imageFile, customApiKey = '') {
     },
   };
 
-  const response = await fetch(`${GEMINI_API_ENDPOINT}?key=${apiKey}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+  const selectedModel = getGeminiModel();
+  const makeRequest = (modelName) => {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  };
+
+  let response = await makeRequest(selectedModel);
+
+  // 若當前最新模型在該專案未開通 (如 404)，自動備援嘗試 gemini-2.5-flash
+  if (!response.ok && response.status === 404 && selectedModel !== 'gemini-2.5-flash') {
+    console.warn(`模型 ${selectedModel} 回傳 404，自動備援切換至 gemini-2.5-flash 嘗試...`);
+    response = await makeRequest('gemini-2.5-flash');
+  }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     const message = errorData.error?.message || `API 回應錯誤碼: ${response.status}`;
-    throw new Error(`Gemini 辨識失敗: ${message}`);
+    throw new Error(`Gemini 辨識失敗 (${selectedModel}): ${message}`);
   }
 
   const result = await response.json();

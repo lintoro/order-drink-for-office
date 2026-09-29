@@ -230,10 +230,10 @@ export default function ScreenA_Create({ onGroupCreated }) {
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
               <Camera className="w-4 h-4 text-emerald-600" />
-              📸 上傳菜單圖片 (Google Gemini 1.5 Flash 智慧辨識)
+              📸 上傳菜單圖片 (Google Gemini 3.8 Flash 最新智慧辨識)
             </span>
             <span className="text-[11px] text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full font-bold">
-              秒級辨識品項與價格
+              最新旗艦 Flash 模型
             </span>
           </div>
 

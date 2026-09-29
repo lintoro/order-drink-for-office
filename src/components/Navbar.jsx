@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
 import { Coffee, UserCheck, ShieldCheck, PlusCircle, Settings, KeyRound, Cloud } from 'lucide-react';
-import { getGeminiApiKey, setGeminiApiKey } from '../services/geminiService';
+import {
+  getGeminiApiKey,
+  setGeminiApiKey,
+  getGeminiModel,
+  setGeminiModel,
+  SUPPORTED_MODELS,
+} from '../services/geminiService';
 import { getFirebaseConfig, saveFirebaseConfig } from '../services/firebaseService';
 
 export default function Navbar({ currentView, setCurrentView, groupData }) {
   const [showSettings, setShowSettings] = useState(false);
+  const [geminiModelInput, setGeminiModelInput] = useState(getGeminiModel());
   const [geminiKeyInput, setGeminiKeyInput] = useState(getGeminiApiKey());
   const [firebaseConfigInput, setFirebaseConfigInput] = useState(
     JSON.stringify(getFirebaseConfig() || {}, null, 2)
@@ -14,6 +21,7 @@ export default function Navbar({ currentView, setCurrentView, groupData }) {
   const handleSaveSettings = (e) => {
     e.preventDefault();
     setGeminiApiKey(geminiKeyInput);
+    setGeminiModel(geminiModelInput);
     try {
       if (firebaseConfigInput.trim() && firebaseConfigInput.trim() !== '{}') {
         saveFirebaseConfig(JSON.parse(firebaseConfigInput));
@@ -114,11 +122,35 @@ export default function Navbar({ currentView, setCurrentView, groupData }) {
             </div>
 
             <form onSubmit={handleSaveSettings} className="space-y-4 text-xs">
+              {/* Gemini Model 選擇 */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
+                    Gemini 視覺模型版本
+                  </span>
+                  <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">
+                    預設最新 Flash
+                  </span>
+                </label>
+                <select
+                  value={geminiModelInput}
+                  onChange={(e) => setGeminiModelInput(e.target.value)}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 text-slate-800 font-medium"
+                >
+                  {SUPPORTED_MODELS.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Gemini Flash API Key */}
               <div>
                 <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1">
                   <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
-                  Google Gemini Flash API Key (用於菜單圖片辨識)
+                  Google Gemini API Key (用於菜單圖片辨識)
                 </label>
                 <input
                   type="password"
