@@ -134,6 +134,22 @@ export function pruneExpiredCache() {
   localStorage.setItem(CACHE_INDEX_KEY, JSON.stringify(validIndex));
 }
 
+/**
+ * 刪除指定關鍵字的本地菜單快取 (強制刷新時使用)
+ * @param {string} rawKey - 搜尋關鍵字或店名
+ */
+export function removeMenuFromCache(rawKey) {
+  if (!rawKey) return;
+  const key = normalizeCacheKey(rawKey);
+  const storageKey = CACHE_PREFIX + key;
+  try {
+    localStorage.removeItem(storageKey);
+    removeKeyFromIndex(key);
+  } catch (e) {
+    console.warn('移除快取失敗', e);
+  }
+}
+
 // 輔助函式：新增索引
 function addKeyToIndex(key) {
   const index = getCacheIndex();

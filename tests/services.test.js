@@ -185,6 +185,16 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
       const cached = getMenuFromCache('過期店');
       expect(cached).toBeNull();
     });
+
+    it('支援手動刪除特定店家的本地快取 (強制刷新)', async () => {
+      const { getMenuFromCache, saveMenuToCache, removeMenuFromCache } = await import('../src/utils/menuCache');
+
+      saveMenuToCache('待清除店', { storeName: '待清除店' });
+      expect(getMenuFromCache('待清除店')).not.toBeNull();
+
+      removeMenuFromCache('待清除店');
+      expect(getMenuFromCache('待清除店')).toBeNull();
+    });
   });
 
   // 7. 方案 B：Cloudflare Worker 代理設定測試
@@ -199,6 +209,25 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
 
       setWorkerProxyUrl('');
       expect(getWorkerProxyUrl()).toBe('');
+    });
+  });
+
+  // 8. 門市維護：歇業與隱藏門市管理測試
+  describe('門市維護 (歇業與隱藏門市)', () => {
+    it('能夠隱藏特定門市並從隱藏清單恢復', async () => {
+      const { getHiddenStoreIds, hideStore, unhideStore } = await import('../src/utils/storage');
+
+      expect(getHiddenStoreIds()).toEqual([]);
+
+      hideStore('store_closed_01');
+      expect(getHiddenStoreIds()).toContain('store_closed_01');
+
+      hideStore('store_closed_02');
+      expect(getHiddenStoreIds()).toHaveLength(2);
+
+      unhideStore('store_closed_01');
+      expect(getHiddenStoreIds()).not.toContain('store_closed_01');
+      expect(getHiddenStoreIds()).toContain('store_closed_02');
     });
   });
 });

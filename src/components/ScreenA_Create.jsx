@@ -9,8 +9,14 @@ import {
   getWorkerProxyUrl,
   setWorkerProxyUrl,
 } from '../services/geminiService';
-import { getCustomStores, saveCustomStore } from '../utils/storage';
-import { saveMenuToCache } from '../utils/menuCache';
+import {
+  getCustomStores,
+  saveCustomStore,
+  getHiddenStoreIds,
+  hideStore,
+  unhideStore,
+} from '../utils/storage';
+import { saveMenuToCache, removeMenuFromCache } from '../utils/menuCache';
 import {
   Store,
   Clock,
@@ -33,6 +39,9 @@ import {
   MapPin,
   CalendarCheck,
   ArrowUpDown,
+  RefreshCw,
+  EyeOff,
+  Eye,
 } from 'lucide-react';
 
 export default function ScreenA_Create({ onGroupCreated }) {
@@ -79,6 +88,8 @@ export default function ScreenA_Create({ onGroupCreated }) {
   const [createdResult, setCreatedResult] = useState(null);
   const [copyNotice, setCopyNotice] = useState('');
   const [saveStoreNotice, setSaveStoreNotice] = useState('');
+  const [hiddenStoreIds, setHiddenStoreIds] = useState(getHiddenStoreIds());
+  const [showHiddenModal, setShowHiddenModal] = useState(false);
 
   // 初始化：將南投在地名店自動預載入本地快取 (方案 A)
   useEffect(() => {
@@ -88,6 +99,44 @@ export default function ScreenA_Create({ onGroupCreated }) {
       }
     });
   }, []);
+
+  // 1. 強制清除當前店家的本地快取 (店家改價/換菜單時使用)
+  const handleClearCurrentStoreCache = () => {
+    if (!storeName) return;
+    removeMenuFromCache(storeName);
+    if (branchName) {
+      removeMenuFromCache(`${storeName} ${branchName}`);
+    }
+    setSaveStoreNotice(
+      `✓ 已清除「${storeName} ${branchName}」的本地快取！若店家改價或換菜單，再次解析將重新取得最新內容。`
+    );
+    setTimeout(() => setSaveStoreNotice(''), 4500);
+  };
+
+  // 2. 標註歇業 / 從選單隱藏當前門市
+  const handleHideCurrentStore = () => {
+    const targetStore = allStores.find((s) => s.id === selectedStoreId);
+    const displayName = targetStore ? `${targetStore.name} ${targetStore.branchName || ''}` : storeName;
+    if (confirm(`確定要將「${displayName}」標記為歇業或從開團選單中隱藏嗎？\n（日後可隨時從右上角「已隱藏」清單中恢復）`)) {
+      hideStore(selectedStoreId);
+      const nextHidden = [...hiddenStoreIds, selectedStoreId];
+      setHiddenStoreIds(nextHidden);
+
+      // 切換至其他可用門市
+      const nextAvailable = allStores.find((s) => !nextHidden.includes(s.id));
+      if (nextAvailable) {
+        handleStoreChange(nextAvailable.id);
+      }
+      setSaveStoreNotice(`✓ 已將「${displayName}」移至隱藏清單。`);
+      setTimeout(() => setSaveStoreNotice(''), 4000);
+    }
+  };
+
+  // 3. 恢復顯示特定門市
+  const handleUnhideStore = (storeId) => {
+    unhideStore(storeId);
+    setHiddenStoreIds((prev) => prev.filter((id) => id !== storeId));
+  };
 
   // 切換店家範本
   const handleStoreChange = (storeId) => {
@@ -519,11 +568,37 @@ export default function ScreenA_Create({ onGroupCreated }) {
                 <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   從常用庫快速選擇
                 </label>
-                <div className="flex gap-2 text-[11px] text-emerald-600 font-medium">
-                  <button type="button" onClick={handleExportStores} className="flex items-center gap-0.5 hover:underline">
+                <div className="flex items-center gap-2 text-[11px] font-medium">
+                  {hiddenStoreIds.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowHiddenModal(true)}
+                      className="flex items-center gap-0.5 text-amber-600 hover:underline"
+                    >
+                      <Eye className="w-3 h-3" />
+                      已隱藏 ({hiddenStoreIds.length})
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleClearCurrentStoreCache}
+                    title="店家改價或換菜單時，清除本地快取以重新抓取"
+                    className="flex items-center gap-0.5 text-slate-500 hover:text-emerald-700 hover:underline"
+                  >
+                    <RefreshCw className="w-3 h-3" /> 刷新快取
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleHideCurrentStore}
+                    title="門市搬遷、歇業或暫停服務時，從選單中隱藏"
+                    className="flex items-center gap-0.5 text-slate-500 hover:text-red-600 hover:underline"
+                  >
+                    <EyeOff className="w-3 h-3" /> 歇業隱藏
+                  </button>
+                  <button type="button" onClick={handleExportStores} className="flex items-center gap-0.5 text-emerald-600 hover:underline">
                     <Download className="w-3 h-3" /> 匯出
                   </button>
-                  <label className="flex items-center gap-0.5 hover:underline cursor-pointer">
+                  <label className="flex items-center gap-0.5 text-emerald-600 hover:underline cursor-pointer">
                     <FileJson className="w-3 h-3" /> 匯入
                     <input type="file" accept=".json" onChange={handleImportStores} className="hidden" />
                   </label>
@@ -535,9 +610,9 @@ export default function ScreenA_Create({ onGroupCreated }) {
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
               >
                 {/* 1. 歷史自訂菜單 */}
-                {customStores.length > 0 && (
+                {customStores.filter((s) => !hiddenStoreIds.includes(s.id)).length > 0 && (
                   <optgroup label="💾 我的歷史自訂店家">
-                    {customStores.map((s) => (
+                    {customStores.filter((s) => !hiddenStoreIds.includes(s.id)).map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} {s.branchName ? `(${s.branchName})` : ''} - {s.tagline || '自訂'}
                       </option>
@@ -547,7 +622,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
 
                 {/* 2. 南投市區 */}
                 <optgroup label="📍 南投市區門市 (復興/民族/南陽/彰南)">
-                  {DEFAULT_STORES.filter((s) => s.area === '南投市區').map((s) => (
+                  {DEFAULT_STORES.filter((s) => s.area === '南投市區' && !hiddenStoreIds.includes(s.id)).map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} ({s.branchName}) · 📞 {s.phone}
                     </option>
@@ -556,7 +631,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
 
                 {/* 3. 南崗工業區 */}
                 <optgroup label="📍 南崗工業區外送門市 (南崗路)">
-                  {DEFAULT_STORES.filter((s) => s.area === '南崗工業區').map((s) => (
+                  {DEFAULT_STORES.filter((s) => s.area === '南崗工業區' && !hiddenStoreIds.includes(s.id)).map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} ({s.branchName}) · 📞 {s.phone}
                     </option>
@@ -565,7 +640,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
 
                 {/* 4. 中興新村 */}
                 <optgroup label="📍 中興新村生活圈門市 (光明南/南崗一)">
-                  {DEFAULT_STORES.filter((s) => s.area === '中興新村').map((s) => (
+                  {DEFAULT_STORES.filter((s) => s.area === '中興新村' && !hiddenStoreIds.includes(s.id)).map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} ({s.branchName}) · 📞 {s.phone}
                     </option>
@@ -574,7 +649,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
 
                 {/* 5. 草屯商圈 */}
                 <optgroup label="📍 草屯商圈門市 (太平/中正/碧山)">
-                  {DEFAULT_STORES.filter((s) => s.area === '草屯商圈').map((s) => (
+                  {DEFAULT_STORES.filter((s) => s.area === '草屯商圈' && !hiddenStoreIds.includes(s.id)).map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} ({s.branchName}) · 📞 {s.phone}
                     </option>
@@ -582,9 +657,9 @@ export default function ScreenA_Create({ onGroupCreated }) {
                 </optgroup>
 
                 {/* 6. 其他示範門市 */}
-                {DEFAULT_STORES.filter((s) => !s.area).length > 0 && (
+                {DEFAULT_STORES.filter((s) => !s.area && !hiddenStoreIds.includes(s.id)).length > 0 && (
                   <optgroup label="🍵 其他範本店家">
-                    {DEFAULT_STORES.filter((s) => !s.area).map((s) => (
+                    {DEFAULT_STORES.filter((s) => !s.area && !hiddenStoreIds.includes(s.id)).map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.name} ({s.tagline || '示範'})
                       </option>
@@ -989,6 +1064,70 @@ export default function ScreenA_Create({ onGroupCreated }) {
                 className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all"
               >
                 儲存並開始辨識
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 已隱藏 / 歇業門市管理彈窗 */}
+      {showHiddenModal && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 space-y-4 shadow-xl">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                <EyeOff className="w-4 h-4 text-amber-600" />
+                已隱藏 / 已歇業門市管理 ({hiddenStoreIds.length})
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowHiddenModal(false)}
+                className="text-slate-400 hover:text-slate-600 text-xs font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              以下門市已從開團下拉選單中隱藏（可能已歇業、搬遷或暫不支援外送）。點擊「恢復顯示」即可重新加回選單。
+            </p>
+
+            <div className="max-h-60 overflow-y-auto space-y-2 divide-y divide-slate-100 pr-1">
+              {hiddenStoreIds.length === 0 ? (
+                <div className="text-center py-6 text-xs text-slate-400">目前沒有隱藏的門市</div>
+              ) : (
+                hiddenStoreIds.map((id) => {
+                  const s = allStores.find((store) => store.id === id);
+                  return (
+                    <div key={id} className="pt-2 flex items-center justify-between gap-2 text-xs">
+                      <div>
+                        <div className="font-bold text-slate-800">
+                          {s ? s.name : id} {s?.branchName ? `(${s.branchName})` : ''}
+                        </div>
+                        <div className="text-[11px] text-slate-400">
+                          {s?.phone || ''} {s?.area ? `· ${s.area}` : ''}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleUnhideStore(id)}
+                        className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-lg text-[11px] transition-all whitespace-nowrap"
+                      >
+                        恢復顯示
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowHiddenModal(false)}
+                className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold"
+              >
+                完成
               </button>
             </div>
           </div>

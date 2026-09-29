@@ -7,6 +7,7 @@ const STORAGE_KEYS = {
   CURRENT_GROUP: 'drink_order_group_data',
   USER_NICKNAME: 'drink_order_user_nickname',
   CUSTOM_STORES: 'drink_order_custom_stores',
+  HIDDEN_STORES: 'drink_order_hidden_stores',
 };
 
 // 讀取當前團購資料
@@ -58,4 +59,32 @@ export function saveCustomStore(store) {
   const existing = getCustomStores();
   const updated = [store, ...existing.filter((s) => s.id !== store.id)];
   localStorage.setItem(STORAGE_KEYS.CUSTOM_STORES, JSON.stringify(updated));
+}
+
+// 取得已隱藏/已歇業店家 ID 陣列
+export function getHiddenStoreIds() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.HIDDEN_STORES);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+// 隱藏特定店家（標記歇業或不在外送範圍）
+export function hideStore(storeId) {
+  if (!storeId) return;
+  const list = getHiddenStoreIds();
+  if (!list.includes(storeId)) {
+    const updated = [...list, storeId];
+    localStorage.setItem(STORAGE_KEYS.HIDDEN_STORES, JSON.stringify(updated));
+  }
+}
+
+// 取消隱藏特定店家（恢復顯示）
+export function unhideStore(storeId) {
+  if (!storeId) return;
+  const list = getHiddenStoreIds();
+  const updated = list.filter((id) => id !== storeId);
+  localStorage.setItem(STORAGE_KEYS.HIDDEN_STORES, JSON.stringify(updated));
 }
