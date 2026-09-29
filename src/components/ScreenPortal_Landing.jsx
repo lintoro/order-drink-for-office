@@ -47,19 +47,12 @@ export default function ScreenPortal_Landing({
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-8 animate-in fade-in duration-300">
+    <div className="max-w-3xl mx-auto p-4 space-y-6 animate-in fade-in duration-300">
       {/* 1. 頂部大廳橫幅 */}
-      <div className="text-center space-y-3 pt-4 pb-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full border border-emerald-200">
-          <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-          辦公室專屬 · 南投在地 51 間名店秒開外送
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">
-          辦公室訂飲料統計小工具
+      <div className="text-center pt-2 pb-1">
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">
+          辦公室訂飲料統計
         </h1>
-        <p className="text-sm text-slate-500 max-w-xl mx-auto leading-relaxed">
-          告別群組 +1 混亂！自動平攤外送費、同暱稱防呆覆蓋、一鍵複製聚合下單文字，現場對帳核銷零失誤。
-        </p>
       </div>
 
       {/* 2. 若當前已有進行中的團購，顯著提示卡 */}
@@ -96,21 +89,21 @@ export default function ScreenPortal_Landing({
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-800">我是主揪 · 發起開團</h2>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                自內建 51 家南投在地名店中選取菜單，或拍照上傳菜單讓 AI 自動辨識，生成雙網址分流管理。
+              <p className="text-xs text-slate-500 mt-1">
+                選擇店家菜單或拍照上傳，建立團購並產生點餐連結。
               </p>
             </div>
 
             <form onSubmit={handleStartHost} className="space-y-3 pt-2">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  主揪暱稱 (供同仁辨識與核銷)
+                  主揪暱稱
                 </label>
                 <input
                   type="text"
                   value={adminNameInput}
                   onChange={(e) => setAdminNameInput(e.target.value)}
-                  placeholder="例如：主揪小明 / 行銷部阿豪"
+                  placeholder="例如：主揪小明"
                   className="w-full px-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium text-slate-800"
                 />
               </div>
@@ -126,7 +119,7 @@ export default function ScreenPortal_Landing({
 
           <div className="text-[11px] text-slate-400 flex items-center gap-1 pt-2 border-t border-slate-100">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>開團後自動產出無密碼管理權限與同事點餐網址</span>
+            <span>開團後自動產生專屬管理網址與同事點餐連結</span>
           </div>
         </div>
 
@@ -138,8 +131,8 @@ export default function ScreenPortal_Landing({
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-800">我是同事 · 加入點餐</h2>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                若主揪已在 LINE / Slack 群組發布點餐網址，請直接點選該連結；或在此貼上團購代碼。
+              <p className="text-xs text-slate-500 mt-1">
+                若已有邀請網址請直接開啟，或在下方貼上代碼進入。
               </p>
             </div>
 
