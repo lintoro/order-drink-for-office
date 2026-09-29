@@ -6,18 +6,25 @@
 import { getMenuFromCache, saveMenuToCache } from '../utils/menuCache';
 
 export const SUPPORTED_MODELS = [
+  { id: 'gemini-3.5-flash-lite', name: 'Gemini 3.5 Flash-Lite (⚡ 推薦 · 極速高配額免排隊)' },
   { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash (Google 官方標準 Flash 模型)' },
+  { id: 'gemini-3.7-flash', name: 'Gemini 3.7 Flash' },
+  { id: 'gemini-3.6-flash', name: 'Gemini 3.6 Flash' },
 ];
 
 /**
- * 取得當前設定之 Gemini 模型名稱 (固定使用 Google 官方指定 gemini-3.8-flash)
+ * 取得當前設定之 Gemini 模型名稱 (預設使用高可用性極速輕量之 gemini-3.5-flash-lite)
  */
 export function getGeminiModel() {
-  return 'gemini-3.8-flash';
+  return localStorage.getItem('drink_order_gemini_model') || 'gemini-3.5-flash-lite';
 }
 
-export function setGeminiModel() {
-  // 固定使用官方標準 gemini-3.8-flash
+export function setGeminiModel(model) {
+  if (model && model.trim()) {
+    localStorage.setItem('drink_order_gemini_model', model.trim());
+  } else {
+    localStorage.removeItem('drink_order_gemini_model');
+  }
 }
 
 export const DEFAULT_WORKER_PROXY_URL = 'https://gemini-proxy.lcc5201129.workers.dev';
@@ -249,7 +256,7 @@ async function callGeminiApi(payloadParts, customApiKey = '') {
     },
   };
 
-  const selectedModel = getGeminiModel();
+  const primaryModel = getGeminiModel();
   const makeRequest = (modelName) => {
     // 方案 B：若有設定 Cloudflare Worker 代理，優先走中繼（保護金鑰 + 伺服器級快取）
     if (proxyUrl) {
@@ -275,42 +282,60 @@ async function callGeminiApi(payloadParts, customApiKey = '') {
     });
   };
 
+  // 建立模型容錯備援清單：優先呼叫指定模型，若遇 503 (尖峰) 或 429 (配額限制) 自動降級備援
+  const candidateModels = [
+    primaryModel,
+    'gemini-3.5-flash-lite',
+    'gemini-3.8-flash',
+    'gemini-3.7-flash',
+    'gemini-3.6-flash',
+  ].filter((m, idx, arr) => arr.indexOf(m) === idx);
+
   let response;
-  let attempts = 0;
-  const maxAttempts = 2; // 最多重試 2 次
+  let lastUsedModel = primaryModel;
 
-  while (attempts <= maxAttempts) {
-    response = await makeRequest(selectedModel);
-    if (response.ok) break;
+  for (const modelToTry of candidateModels) {
+    lastUsedModel = modelToTry;
+    let attempts = 0;
+    while (attempts < 2) {
+      response = await makeRequest(modelToTry);
+      if (response.ok) break;
 
-    // 若遇到 Google 伺服器尖峰 (503 High Demand 或 429)，自動等待 1.5 秒重試
-    if ((response.status === 503 || response.status === 429) && attempts < maxAttempts) {
-      attempts++;
-      console.warn(`Gemini 伺服器流量尖峰 (狀態: ${response.status})，等待 1.5 秒後進行第 ${attempts} 次自動重試...`);
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      continue;
+      // 若遇到 Google 伺服器尖峰 (503 High Demand) 或頻率限制 (429)，短暫等待重試或換備援模型
+      if (response.status === 503 || response.status === 429) {
+        attempts++;
+        if (attempts < 2) {
+          console.warn(`[Gemini API] 模型 ${modelToTry} 遇流量尖峰或配額限制 (${response.status})，等待 1 秒重試...`);
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        }
+      } else {
+        break;
+      }
     }
-    break;
+    if (response?.ok) {
+      break;
+    }
+    console.warn(`[Gemini API] 模型 ${modelToTry} 暫不可用，自動切換至備援模型嘗試...`);
   }
 
-  if (!response.ok) {
+  if (!response || !response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    const rawMessage = errorData.error?.message || `API 回應錯誤碼: ${response.status}`;
+    const rawMessage = errorData.error?.message || `API 回應錯誤碼: ${response?.status || '未知'}`;
 
     // 針對 Google Free Tier 429 頻率配額限制友善轉譯
     if (
-      response.status === 429 ||
+      response?.status === 429 ||
       rawMessage.includes('Quota exceeded') ||
       rawMessage.includes('exceeded your current quota')
     ) {
       const retryMatch = rawMessage.match(/retry in ([0-9.]+)s/i);
       const retrySeconds = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 18;
       throw new Error(
-        `Google 免費 API 每分鐘使用頻率已達上限（Rate Limit）。請稍候 ${retrySeconds} 秒冷卻時間後，再次點擊即可正常生成！`
+        `Google 免費 API 使用頻率已達上限（Rate Limit）。請稍候 ${retrySeconds} 秒冷卻時間後，再次點擊即可正常生成！`
       );
     }
 
-    throw new Error(`Gemini 3.8 Flash 辨識失敗: ${rawMessage}`);
+    throw new Error(`Gemini AI (${lastUsedModel}) 辨識失敗: ${rawMessage}`);
   }
 
   const result = await response.json();
