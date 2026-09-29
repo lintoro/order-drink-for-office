@@ -4,16 +4,16 @@
  */
 
 export const SUPPORTED_MODELS = [
-  { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash (最新世代，速度與精準度最優)' },
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (穩定備援版本)' },
-  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash (舊版相容)' },
+  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (目前官方推薦主力，穩定秒級輸出)' },
+  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (經典高速版本，高穩定備援)' },
+  { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash (最新預覽，若遇尖峰排隊自動備援)' },
 ];
 
 /**
- * 取得當前設定之 Gemini 模型名稱 (預設最新 gemini-3.8-flash)
+ * 取得當前設定之 Gemini 模型名稱 (預設穩定 gemini-2.5-flash)
  */
 export function getGeminiModel() {
-  return localStorage.getItem('drink_order_gemini_model') || 'gemini-3.8-flash';
+  return localStorage.getItem('drink_order_gemini_model') || 'gemini-2.5-flash';
 }
 
 export function setGeminiModel(modelId) {
@@ -180,10 +180,10 @@ async function callGeminiApi(payloadParts, customApiKey = '') {
     response = await makeRequest(usedModel);
   }
 
-  // 若 gemini-2.5-flash 仍遇到尖峰負載，最後備援嘗試 gemini-1.5-flash
-  if (!response.ok && usedModel !== 'gemini-1.5-flash') {
-    console.warn(`備援模型重試未成功，嘗試最後備援 gemini-1.5-flash...`);
-    usedModel = 'gemini-1.5-flash';
+  // 若 gemini-2.5-flash 仍遇到尖峰負載，最後備援嘗試 gemini-2.0-flash
+  if (!response.ok && usedModel !== 'gemini-2.0-flash') {
+    console.warn(`備援模型重試未成功，嘗試穩定備援 gemini-2.0-flash...`);
+    usedModel = 'gemini-2.0-flash';
     response = await makeRequest(usedModel);
   }
 

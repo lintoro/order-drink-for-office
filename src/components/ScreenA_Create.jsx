@@ -330,7 +330,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
               {/* 快速示範熱門點選 */}
               <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
                 <span className="font-bold">快速試用：</span>
-                {['一沐日 新竹巨城', '可不可熟成紅茶', '五桐號 台北信義', '得正 Oolong TEA'].map((demo) => (
+                {['清心福全', '一沐日 新竹巨城', '可不可熟成紅茶', '五桐號 台北信義', '得正 Oolong TEA'].map((demo) => (
                   <button
                     type="button"
                     key={demo}
@@ -660,7 +660,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
               請設定 Gemini API Key
             </h3>
             <p className="text-xs text-slate-500">
-              用於調用 Google Gemini 1.5 Flash 辨識手搖飲菜單照片。金鑰將僅保存在本機。
+              用於調用 Google Gemini 視覺與語言模型智慧生成手搖飲菜單。金鑰將僅保存在本機。
             </p>
             <input
               type="password"
@@ -682,7 +682,11 @@ export default function ScreenA_Create({ onGroupCreated }) {
                 onClick={() => {
                   setGeminiApiKey(tempApiKey);
                   setShowApiKeyModal(false);
-                  if (menuImage) handleStartAiParsing();
+                  if (aiMode === 'text' && textOrUrlInput.trim()) {
+                    handleStartTextParsing();
+                  } else if (aiMode === 'image' && menuImage) {
+                    handleStartImageParsing();
+                  }
                 }}
                 className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold"
               >
