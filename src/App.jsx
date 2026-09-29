@@ -162,7 +162,7 @@ export default function App() {
       {/* 狀態同步即時通知條 */}
       <div className="bg-slate-100/90 border-b border-slate-200 py-1 px-4 flex items-center justify-between text-[11px] text-slate-600">
         <div className="flex items-center gap-2">
-          <span>模式：{isCloudModeEnabled() ? '🟢 Firebase 雲端即時連線' : '🟡 本機跨分頁即時同步'}</span>
+          <span>模式：{isCloudModeEnabled() ? '🟢 Cloudflare 雲端即時連線' : '🟡 本機跨分頁即時同步'}</span>
           {syncStatusText && (
             <span className="font-bold text-emerald-600 transition-all">{syncStatusText}</span>
           )}
@@ -196,28 +196,39 @@ export default function App() {
           />
         )}
 
-        {currentView === 'order' && (
-          <ScreenB_UserOrder
-            groupData={groupData}
-            onUpdateGroup={handleUpdateGroup}
-            onGoToAdmin={(targetView) => {
-              const view = typeof targetView === 'string' ? targetView : 'admin';
-              if (view === 'admin') {
-                const token =
-                  groupData?.adminToken ||
-                  (groupData?.orderId ? getAdminToken(groupData.orderId) : '');
-                if (token && groupData?.orderId) {
-                  window.history.pushState(
-                    {},
-                    '',
-                    `?order=${groupData.orderId}&token=${token}`
-                  );
+        {currentView === 'order' &&
+          (!groupData && urlOrderId ? (
+            <div className="max-w-md mx-auto my-12 p-8 bg-white border border-slate-200 rounded-3xl shadow-sm text-center space-y-4">
+              <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto text-3xl animate-bounce">
+                🥤
+              </div>
+              <h2 className="text-xl font-bold text-slate-800">正在連線載入飲料團購...</h2>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                正在為您從雲端同步主揪建立的菜單與點餐清單，請稍候片刻！
+              </p>
+            </div>
+          ) : (
+            <ScreenB_UserOrder
+              groupData={groupData}
+              onUpdateGroup={handleUpdateGroup}
+              onGoToAdmin={(targetView) => {
+                const view = typeof targetView === 'string' ? targetView : 'admin';
+                if (view === 'admin') {
+                  const token =
+                    groupData?.adminToken ||
+                    (groupData?.orderId ? getAdminToken(groupData.orderId) : '');
+                  if (token && groupData?.orderId) {
+                    window.history.pushState(
+                      {},
+                      '',
+                      `?order=${groupData.orderId}&token=${token}`
+                    );
+                  }
                 }
-              }
-              setCurrentView(view);
-            }}
-          />
-        )}
+                setCurrentView(view);
+              }}
+            />
+          ))}
 
         {currentView === 'admin' && (
           <ScreenC_Admin
