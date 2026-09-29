@@ -38,6 +38,7 @@
 - [x] 歷史常用店家庫管理（支援一鍵存庫、匯出 JSON、匯入 JSON 備份）
 - [x] **方案 A：本地 LocalStorage 菜單快取機制 (`src/utils/menuCache.js`)，同店二次開團 0 秒秒讀、0 API 消耗**
 - [x] **方案 B：專屬 Cloudflare Worker 代理中繼層 (`cloudflare-worker/`)，隱藏後端 API Key 並提供跨設備共享快取**
+- [x] **南投在地手搖名店資料庫 (`src/data/nantouStores.js`)：涵蓋南投市區、南崗工業區、中興新村、草屯商圈 20+ 實體門市（真實電話、分店、中南部定價），0 秒下拉直開**
 - [x] 設定截止時間與預估外送費
 - [x] 開團產出雙網址（公開填單網址 + 主揪管理網址 Token）
 

@@ -1,9 +1,12 @@
+import { NANTOU_STORES } from './nantouStores';
+
 /**
- * 預設常用店家菜單資料 (可直接開團測試，亦支援未來 AI 辨識後新增擴充)
+ * 預設常用店家菜單資料 (優先掛載南投/南崗/中興/草屯在地手搖名店，支援 0 秒直開)
  */
 export const DEFAULT_STORES = [
+  ...NANTOU_STORES,
   {
-    id: 'store_dezheng',
+    id: 'store_dezheng_taichung',
     name: '得正 Oolong TEA Project',
     branchName: '台中向上南店',
     phone: '04-24726588',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DEFAULT_STORES } from '../data/defaultStores';
 import { generateAdminToken } from '../utils/calc';
 import {
@@ -10,6 +10,7 @@ import {
   setWorkerProxyUrl,
 } from '../services/geminiService';
 import { getCustomStores, saveCustomStore } from '../utils/storage';
+import { saveMenuToCache } from '../utils/menuCache';
 import {
   Store,
   Clock,
@@ -78,6 +79,15 @@ export default function ScreenA_Create({ onGroupCreated }) {
   const [createdResult, setCreatedResult] = useState(null);
   const [copyNotice, setCopyNotice] = useState('');
   const [saveStoreNotice, setSaveStoreNotice] = useState('');
+
+  // 初始化：將南投在地名店自動預載入本地快取 (方案 A)
+  useEffect(() => {
+    DEFAULT_STORES.forEach((store) => {
+      if (store.branchName) {
+        saveMenuToCache(`${store.name} ${store.branchName}`, store, 30);
+      }
+    });
+  }, []);
 
   // 切換店家範本
   const handleStoreChange = (storeId) => {
@@ -400,15 +410,22 @@ export default function ScreenA_Create({ onGroupCreated }) {
                 />
               </div>
 
-              {/* 快速示範熱門點選 */}
+              {/* 快速示範熱門點選 (南投在地名店快捷鍵) */}
               <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
-                <span className="font-bold">快速試用：</span>
-                {['UG 樂己 南投復興店', '清心福全 南投南陽店', '一沐日 新竹巨城', '可不可熟成紅茶', '五桐號 台北信義', '得正 Oolong TEA'].map((demo) => (
+                <span className="font-bold">南投熱門快捷：</span>
+                {[
+                  'UG 樂己 南投復興店',
+                  '清心福全 南投南崗店',
+                  '得正 草屯太平店',
+                  '50嵐 南投民族店',
+                  'TEA TOP 中興新村店',
+                  '五桐號 草屯太平店',
+                ].map((demo) => (
                   <button
                     type="button"
                     key={demo}
                     onClick={() => setTextOrUrlInput(demo)}
-                    className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-md transition-all"
+                    className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-md transition-all font-medium"
                   >
                     + {demo}
                   </button>
@@ -517,11 +534,63 @@ export default function ScreenA_Create({ onGroupCreated }) {
                 onChange={(e) => handleStoreChange(e.target.value)}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all"
               >
-                {allStores.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} ({s.tagline || '常用菜單'})
-                  </option>
-                ))}
+                {/* 1. 歷史自訂菜單 */}
+                {customStores.length > 0 && (
+                  <optgroup label="💾 我的歷史自訂店家">
+                    {customStores.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} {s.branchName ? `(${s.branchName})` : ''} - {s.tagline || '自訂'}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+
+                {/* 2. 南投市區 */}
+                <optgroup label="📍 南投市區門市 (復興/民族/南陽/彰南)">
+                  {DEFAULT_STORES.filter((s) => s.area === '南投市區').map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.branchName}) · 📞 {s.phone}
+                    </option>
+                  ))}
+                </optgroup>
+
+                {/* 3. 南崗工業區 */}
+                <optgroup label="📍 南崗工業區外送門市 (南崗路)">
+                  {DEFAULT_STORES.filter((s) => s.area === '南崗工業區').map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.branchName}) · 📞 {s.phone}
+                    </option>
+                  ))}
+                </optgroup>
+
+                {/* 4. 中興新村 */}
+                <optgroup label="📍 中興新村生活圈門市 (光明南/南崗一)">
+                  {DEFAULT_STORES.filter((s) => s.area === '中興新村').map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.branchName}) · 📞 {s.phone}
+                    </option>
+                  ))}
+                </optgroup>
+
+                {/* 5. 草屯商圈 */}
+                <optgroup label="📍 草屯商圈門市 (太平/中正/碧山)">
+                  {DEFAULT_STORES.filter((s) => s.area === '草屯商圈').map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.branchName}) · 📞 {s.phone}
+                    </option>
+                  ))}
+                </optgroup>
+
+                {/* 6. 其他示範門市 */}
+                {DEFAULT_STORES.filter((s) => !s.area).length > 0 && (
+                  <optgroup label="🍵 其他範本店家">
+                    {DEFAULT_STORES.filter((s) => !s.area).map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} ({s.tagline || '示範'})
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </div>
 

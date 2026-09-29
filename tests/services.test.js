@@ -70,6 +70,32 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
       expect(stores.length).toBe(1);
       expect(stores[0].name).toBe('可不可熟成紅茶 (已改版)');
     });
+
+    it('南投在地資料庫包含完整分區、分店電話、地址與中南部定價', async () => {
+      const { NANTOU_STORES } = await import('../src/data/nantouStores');
+      expect(NANTOU_STORES.length).toBeGreaterThanOrEqual(15);
+
+      // 檢查是否涵蓋四大區域
+      const areas = new Set(NANTOU_STORES.map((s) => s.area));
+      expect(areas.has('南投市區')).toBe(true);
+      expect(areas.has('南崗工業區')).toBe(true);
+      expect(areas.has('中興新村')).toBe(true);
+      expect(areas.has('草屯商圈')).toBe(true);
+
+      // 檢查同品牌不同分店（如清心福全、50嵐、可不可）
+      const chingshinStores = NANTOU_STORES.filter((s) => s.name === '清心福全');
+      expect(chingshinStores.length).toBeGreaterThanOrEqual(3);
+
+      const fiftyLanStores = NANTOU_STORES.filter((s) => s.name === '50嵐');
+      expect(fiftyLanStores.length).toBeGreaterThanOrEqual(2);
+
+      // 驗證每間門市皆具備必要欄位與 049 電話
+      NANTOU_STORES.forEach((store) => {
+        expect(store.phone).toMatch(/^049-/);
+        expect(store.region).toBe('中南部價');
+        expect(store.categories.length).toBeGreaterThan(0);
+      });
+    });
   });
 
   // 3. Firebase 雲端配置儲存 (Phase 4 永不休眠雲端同步)
