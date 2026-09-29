@@ -1,13 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { getLastNickname, saveLastNickname } from '../utils/storage';
 import { calculateItemTotal, calculateDeliveryFee, upsertUserOrder } from '../utils/calc';
-import { Clock, Users, Coffee, Sparkles, CheckCircle, AlertCircle, ShoppingBag } from 'lucide-react';
+import { isCloudModeEnabled } from '../services/syncService';
+import {
+  Clock,
+  Users,
+  Coffee,
+  Sparkles,
+  CheckCircle,
+  AlertCircle,
+  ShoppingBag,
+  ShieldCheck,
+  Radio,
+} from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 const SUGAR_OPTIONS = ['正常糖', '少糖 7分', '半糖 5分', '微糖 3分', '一分糖', '無糖'];
 const ICE_OPTIONS = ['正常冰', '少冰', '微冰', '去冰', '完全去冰', '常溫', '溫熱'];
 
-export default function ScreenB_UserOrder({ groupData, onUpdateGroup }) {
+export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmin }) {
   const [userName, setUserName] = useState(getLastNickname());
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedItemName, setSelectedItemName] = useState('');
@@ -17,6 +28,8 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup }) {
   const [selectedToppings, setSelectedToppings] = useState([]);
   const [note, setNote] = useState('');
   const [submitSuccessMsg, setSubmitSuccessMsg] = useState('');
+
+  const isCloud = isCloudModeEnabled();
 
   // 初始化選單
   useEffect(() => {
@@ -109,12 +122,34 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup }) {
 
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-5">
+      {/* 主揪本機快捷按鈕 */}
+      {onGoToAdmin && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2 flex items-center justify-between text-xs text-amber-900">
+          <div className="flex items-center gap-1.5 font-bold">
+            <ShieldCheck className="w-4 h-4 text-amber-600" />
+            <span>您擁有本團主揪權限</span>
+          </div>
+          <button
+            onClick={onGoToAdmin}
+            className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1 rounded-lg transition-all"
+          >
+            進入主揪管理後台 →
+          </button>
+        </div>
+      )}
+
       {/* 頂部狀態列 */}
       <div className="bg-emerald-600 text-white rounded-2xl p-5 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
-          <span className="px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-bold uppercase tracking-wider">
-            {groupData?.status === 'open' ? '🟢 進行中 (開放點餐)' : groupData?.status === 'locked' ? '🟡 已截單 (訂購中)' : '🎉 飲料已送達'}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-1 bg-white/20 backdrop-blur-sm rounded-full text-xs font-bold uppercase tracking-wider">
+              {groupData?.status === 'open' ? '🟢 開放點餐' : groupData?.status === 'locked' ? '🟡 訂購統整中' : '🎉 飲料已送達'}
+            </span>
+            <span className="flex items-center gap-1 text-[11px] bg-emerald-800/60 px-2 py-0.5 rounded-full text-emerald-100">
+              <Radio className="w-3 h-3 text-emerald-300 animate-pulse" />
+              {isCloud ? '雲端即時連線' : '本機跨頁即時'}
+            </span>
+          </div>
           <div className="flex items-center gap-1.5 text-xs font-medium">
             <Clock className="w-3.5 h-3.5" />
             截止時間：{groupData?.deadline || '未定'}

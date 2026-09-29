@@ -4,6 +4,7 @@ import {
   calculateItemTotal,
   aggregateOrderSummary,
 } from '../utils/calc';
+import { isCloudModeEnabled } from '../services/syncService';
 import {
   ShieldCheck,
   Clock,
@@ -16,15 +17,41 @@ import {
   CheckCircle2,
   AlertCircle,
   Truck,
+  Radio,
+  Share2,
+  ExternalLink,
 } from 'lucide-react';
 
-export default function ScreenC_Admin({ groupData, onUpdateGroup }) {
+export default function ScreenC_Admin({
+  groupData,
+  onUpdateGroup,
+  isAuthorized = true,
+}) {
   const [copyMsg, setCopyMsg] = useState('');
+  const isCloud = isCloudModeEnabled();
 
   if (!groupData) {
     return (
       <div className="max-w-2xl mx-auto p-6 text-center text-slate-500">
         目前尚未開團，請先至「主揪開團」頁面建立一個新團！
+      </div>
+    );
+  }
+
+  // 若 Token 驗證不合法的防呆提示
+  if (!isAuthorized) {
+    return (
+      <div className="max-w-md mx-auto my-12 p-6 bg-white border border-red-200 rounded-2xl shadow-sm text-center space-y-4">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
+        <h3 className="text-lg font-bold text-slate-800">權限不足：無法進入主揪後台</h3>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          您目前的連線網址中未包含有效的主揪 Admin Token。為保護辦公室結單與金額核銷安全，僅限持開團 Token 的主揪才能進入本管理頁。
+        </p>
+        <div className="pt-2">
+          <p className="text-[11px] text-slate-400">
+            如果您是主揪，請使用開團時生成的「主揪管理網址」開啟本頁面。
+          </p>
+        </div>
       </div>
     );
   }
@@ -66,14 +93,14 @@ export default function ScreenC_Admin({ groupData, onUpdateGroup }) {
     groupData.deliveryFee
   );
 
-  // 切換已付款狀態
+  // 切換已付款狀態 (P4 即時寫入)
   const togglePaid = (orderIndex) => {
     const updatedOrders = [...orders];
     updatedOrders[orderIndex].isPaid = !updatedOrders[orderIndex].isPaid;
     onUpdateGroup({ ...groupData, orders: updatedOrders });
   };
 
-  // 切換已取餐狀態
+  // 切換已取餐狀態 (P4 即時寫入)
   const togglePicked = (orderIndex) => {
     const updatedOrders = [...orders];
     updatedOrders[orderIndex].isPicked = !updatedOrders[orderIndex].isPicked;
@@ -100,6 +127,10 @@ export default function ScreenC_Admin({ groupData, onUpdateGroup }) {
     setTimeout(() => setCopyMsg(''), 2500);
   };
 
+  const baseUrl = `${window.location.origin}${window.location.pathname}`;
+  const publicShareUrl = `${baseUrl}?order=${groupData.orderId}`;
+  const adminDirectUrl = `${baseUrl}?order=${groupData.orderId}&token=${groupData.adminToken}`;
+
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-6">
       {/* 頂部管理控制列 */}
@@ -109,13 +140,41 @@ export default function ScreenC_Admin({ groupData, onUpdateGroup }) {
             <ShieldCheck className="w-5 h-5 text-emerald-400" />
             <h2 className="font-bold text-lg">主揪管理後台 · {groupData.storeName}</h2>
           </div>
-          <span className="text-xs bg-slate-700 px-3 py-1 rounded-full font-mono text-slate-300">
-            Token: {groupData.adminToken?.substring(0, 10)}... (具備管理權限)
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 text-[11px] bg-slate-700 px-2.5 py-1 rounded-full text-slate-300">
+              <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
+              {isCloud ? 'Firebase 雲端同步' : '本機跨頁即時'}
+            </span>
+            <span className="text-xs bg-slate-700 px-3 py-1 rounded-full font-mono text-slate-300">
+              Token: {groupData.adminToken?.substring(0, 8)}... (已授權)
+            </span>
+          </div>
+        </div>
+
+        {/* 雙網址快速複製列 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-slate-900/60 p-3 rounded-xl border border-slate-700">
+          <div className="flex items-center justify-between gap-1 text-slate-300">
+            <span className="truncate">📢 公開填單網址: {publicShareUrl}</span>
+            <button
+              onClick={() => copyText(publicShareUrl, '已複製公開填單網址！')}
+              className="text-emerald-400 hover:text-emerald-300 whitespace-nowrap font-bold flex items-center gap-0.5"
+            >
+              <Copy className="w-3.5 h-3.5" /> 複製
+            </button>
+          </div>
+          <div className="flex items-center justify-between gap-1 text-slate-300">
+            <span className="truncate">🔒 主揪專屬網址: {adminDirectUrl}</span>
+            <button
+              onClick={() => copyText(adminDirectUrl, '已複製主揪專屬管理網址！')}
+              className="text-amber-400 hover:text-amber-300 whitespace-nowrap font-bold flex items-center gap-0.5"
+            >
+              <Copy className="w-3.5 h-3.5" /> 複製
+            </button>
+          </div>
         </div>
 
         {/* 快速狀態與截單控制按鈕群 */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-700">
+        <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-700">
           <button
             onClick={extendTime}
             className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-xs font-bold rounded-lg transition-all flex items-center gap-1 text-slate-200"
