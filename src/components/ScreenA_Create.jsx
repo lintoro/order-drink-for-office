@@ -620,8 +620,17 @@ export default function ScreenA_Create({ onGroupCreated }) {
                   </optgroup>
                 )}
 
-                {/* 2. 南投市區 */}
-                <optgroup label="📍 南投市區門市 (復興/民族/南陽/彰南)">
+                {/* 2. 南投在地獨立/自創品牌 */}
+                <optgroup label="✨ 南投在地獨立品牌 (微川/鮮奶奶/曾家/三泰子/米克Q/台茶1號)">
+                  {DEFAULT_STORES.filter((s) => s.area === '南投獨立品牌' && !hiddenStoreIds.includes(s.id)).map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.branchName}) · 📞 {s.phone}
+                    </option>
+                  ))}
+                </optgroup>
+
+                {/* 3. 南投市區連鎖 */}
+                <optgroup label="📍 南投市區連鎖門市 (復興/民族/南陽/彰南)">
                   {DEFAULT_STORES.filter((s) => s.area === '南投市區' && !hiddenStoreIds.includes(s.id)).map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name} ({s.branchName}) · 📞 {s.phone}
@@ -655,17 +664,6 @@ export default function ScreenA_Create({ onGroupCreated }) {
                     </option>
                   ))}
                 </optgroup>
-
-                {/* 6. 其他示範門市 */}
-                {DEFAULT_STORES.filter((s) => !s.area && !hiddenStoreIds.includes(s.id)).length > 0 && (
-                  <optgroup label="🍵 其他範本店家">
-                    {DEFAULT_STORES.filter((s) => !s.area && !hiddenStoreIds.includes(s.id)).map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} ({s.tagline || '示範'})
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
               </select>
             </div>
 

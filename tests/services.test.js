@@ -75,12 +75,24 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
       const { NANTOU_STORES } = await import('../src/data/nantouStores');
       expect(NANTOU_STORES.length).toBeGreaterThanOrEqual(15);
 
-      // 檢查是否涵蓋四大區域
+      // 檢查是否涵蓋各大區域與在地獨立品牌
       const areas = new Set(NANTOU_STORES.map((s) => s.area));
+      expect(areas.has('南投獨立品牌')).toBe(true);
       expect(areas.has('南投市區')).toBe(true);
       expect(areas.has('南崗工業區')).toBe(true);
       expect(areas.has('中興新村')).toBe(true);
       expect(areas.has('草屯商圈')).toBe(true);
+
+      // 檢查南投在地獨立品牌
+      const independentStores = NANTOU_STORES.filter((s) => s.area === '南投獨立品牌');
+      expect(independentStores.length).toBe(6);
+      const independentNames = independentStores.map((s) => s.name);
+      expect(independentNames).toContain('微川飲料製造');
+      expect(independentNames).toContain('鮮奶奶');
+      expect(independentNames).toContain('曾家純蔗糖');
+      expect(independentNames).toContain('三泰子 SAN TAI ZI');
+      expect(independentNames).toContain('米克Q手感茶飲');
+      expect(independentNames).toContain('台茶1號');
 
       // 檢查同品牌不同分店（如清心福全、50嵐、可不可）
       const chingshinStores = NANTOU_STORES.filter((s) => s.name === '清心福全');

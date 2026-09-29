@@ -15,7 +15,244 @@ const TOPPINGS_COMMON = [
 
 export const NANTOU_STORES = [
   // ==========================================
-  // 一、南投市區
+  // ✨ 南投在地獨立/自創品牌 (外送首選)
+  // ==========================================
+  {
+    id: 'store_weichuan_nantou_fuxing',
+    name: '微川飲料製造',
+    branchName: '南投復興店',
+    phone: '049-2206866',
+    address: '南投市復興路 273 號',
+    region: '中南部價',
+    area: '南投獨立品牌',
+    businessHours: '10:00 - 21:00',
+    isOpenToday: true,
+    tagline: '南投文青自創品牌 · 松柏嶺茶葉與茶磚冰塊',
+    categories: [
+      {
+        name: '研磨好茶',
+        items: [
+          { id: 'wc_1', name: '桂花青茶', priceM: 35, priceL: 40 },
+          { id: 'wc_2', name: '松柏嶺高山茶', priceM: 30, priceL: 35 },
+          { id: 'wc_3', name: '熟成紅茶', priceM: 30, priceL: 35 },
+        ],
+      },
+      {
+        name: '川製厚奶與拿鐵',
+        items: [
+          { id: 'wc_4', name: '川製厚奶茶', priceM: 45, priceL: 55 },
+          { id: 'wc_5', name: '熟成紅茶拿鐵', priceM: 50, priceL: 60 },
+          { id: 'wc_6', name: '可可厚奶拿鐵', priceM: 50, priceL: 60 },
+        ],
+      },
+      {
+        name: '茶磚特調',
+        items: [
+          { id: 'wc_7', name: '檸檬冬瓜茶磚', priceM: 40, priceL: 50 },
+          { id: 'wc_8', name: '翡翠檸檬茶', priceM: 45, priceL: 55 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'wc_t1', name: '珍珠', price: 10 },
+      { id: 'wc_t2', name: '椰果', price: 10 },
+      { id: 'wc_t3', name: '茉莉茶凍', price: 10 },
+    ],
+  },
+  {
+    id: 'store_xiannaini_nantou_minzu',
+    name: '鮮奶奶',
+    branchName: '南投民族店',
+    phone: '049-2236479',
+    address: '南投市民族路 351 號',
+    region: '中南部價',
+    area: '南投獨立品牌',
+    businessHours: '10:30 - 20:30',
+    isOpenToday: true,
+    tagline: '手作豆花與手搖茶飲 · 辦公室咀嚼系救星',
+    categories: [
+      {
+        name: '招牌豆花奶凍專區',
+        items: [
+          { id: 'xnn_1', name: '鮮奶奶茶豆花', priceM: 45, priceL: 55 },
+          { id: 'xnn_2', name: '招牌嫩仙草奶凍', priceM: 50, priceL: 60 },
+          { id: 'xnn_3', name: '鮮奶三寶 (豆花+珍珠+芋圓)', priceM: 50, priceL: 60 },
+        ],
+      },
+      {
+        name: '鮮奶手作特調',
+        items: [
+          { id: 'xnn_4', name: '珍珠冬瓜鮮奶', priceM: 45, priceL: 55 },
+          { id: 'xnn_5', name: '黑糖珍珠鮮奶', priceM: 50, priceL: 60 },
+          { id: 'xnn_6', name: '抹茶拿鐵', priceM: 50, priceL: 60 },
+        ],
+      },
+      {
+        name: '原味好茶',
+        items: [
+          { id: 'xnn_7', name: '高山青茶', priceM: 25, priceL: 30 },
+          { id: 'xnn_8', name: '阿薩姆紅茶', priceM: 25, priceL: 30 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'xnn_t1', name: '手工嫩豆花', price: 15 },
+      { id: 'xnn_t2', name: '手作嫩仙草', price: 15 },
+      { id: 'xnn_t3', name: '手工小芋圓', price: 15 },
+      { id: 'xnn_t4', name: 'Q彈珍珠', price: 10 },
+    ],
+  },
+  {
+    id: 'store_zengjia_nantou_zhangnan',
+    name: '曾家純蔗糖',
+    branchName: '南投彰南店',
+    phone: '049-2200056',
+    address: '南投市彰南路一段 1066 號',
+    region: '中南部價',
+    area: '南投獨立品牌',
+    businessHours: '09:00 - 21:00',
+    isOpenToday: true,
+    tagline: '自家種植茶葉 · 100%天然純甘蔗糖熬製',
+    categories: [
+      {
+        name: '天然甘蔗茶飲',
+        items: [
+          { id: 'zj_1', name: '甘蔗石蜜青茶', priceM: 40, priceL: 45 },
+          { id: 'zj_2', name: '甘蔗檸檬', priceM: 50, priceL: 55 },
+          { id: 'zj_3', name: '甘蔗鮮奶', priceM: 55, priceL: 60 },
+        ],
+      },
+      {
+        name: '契作高山茶',
+        items: [
+          { id: 'zj_4', name: '高山冷泡茶', priceM: 35, priceL: 40 },
+          { id: 'zj_5', name: '石蜜青茶', priceM: 30, priceL: 35 },
+          { id: 'zj_6', name: '熟成蜜香紅', priceM: 30, priceL: 35 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'zj_t1', name: '白玉珍珠', price: 10 },
+      { id: 'zj_t2', name: '鮮蘆薈', price: 15 },
+      { id: 'zj_t3', name: '綠茶凍', price: 10 },
+    ],
+  },
+  {
+    id: 'store_santaizi_nantou_zhangnan',
+    name: '三泰子 SAN TAI ZI',
+    branchName: '南投彰南店',
+    phone: '049-2225066',
+    address: '南投市彰南路二段 2 號',
+    region: '中南部價',
+    area: '南投獨立品牌',
+    businessHours: '09:00 - 22:00',
+    isOpenToday: true,
+    tagline: '南投市泰式奶茶專賣 · 南洋特調濃厚茶乳',
+    categories: [
+      {
+        name: '正統泰式系列',
+        items: [
+          { id: 'stz_1', name: '泰式奶奶 (經典泰奶)', priceM: 50, priceL: 60 },
+          { id: 'stz_2', name: '泰式奶綠', priceM: 50, priceL: 60 },
+          { id: 'stz_3', name: '泰式檸檬紅', priceM: 45, priceL: 55 },
+        ],
+      },
+      {
+        name: '拿鐵與特調',
+        items: [
+          { id: 'stz_4', name: '觀音烏龍拿鐵', priceM: 50, priceL: 55 },
+          { id: 'stz_5', name: '冬瓜仙草蜜', priceM: 35, priceL: 40 },
+          { id: 'stz_6', name: '馥郁紅茶', priceM: 30, priceL: 35 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'stz_t1', name: '黑糖珍珠', price: 10 },
+      { id: 'stz_t2', name: '仙草凍', price: 10 },
+      { id: 'stz_t3', name: '椰果', price: 10 },
+    ],
+  },
+  {
+    id: 'store_mikeq_nantou_fuxing',
+    name: '米克Q手感茶飲',
+    branchName: '南投復興店',
+    phone: '049-2228158',
+    address: '南投市復興路',
+    region: '中南部價',
+    area: '南投獨立品牌',
+    businessHours: '10:00 - 21:30',
+    isOpenToday: true,
+    tagline: '南投在地平價手搖 · 陪伴長大的手感好茶',
+    categories: [
+      {
+        name: '手感特調與鮮奶',
+        items: [
+          { id: 'mq_1', name: '鮮奶仙草凍', priceM: 40, priceL: 45 },
+          { id: 'mq_2', name: '綠茶多酚 (石蓮花多酚)', priceM: 35, priceL: 40 },
+          { id: 'mq_3', name: '拿鐵紅茶', priceM: 40, priceL: 45 },
+          { id: 'mq_4', name: '芋香珍珠奶茶', priceM: 40, priceL: 45 },
+        ],
+      },
+      {
+        name: '平價純茶',
+        items: [
+          { id: 'mq_5', name: '四季青茶', priceM: 25, priceL: 30 },
+          { id: 'mq_6', name: '茉莉綠茶', priceM: 25, priceL: 30 },
+          { id: 'mq_7', name: '阿薩姆紅茶', priceM: 25, priceL: 30 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'mq_t1', name: '珍珠', price: 10 },
+      { id: 'mq_t2', name: '仙草凍', price: 10 },
+      { id: 'mq_t3', name: '椰果', price: 10 },
+      { id: 'mq_t4', name: '統一布丁', price: 15 },
+    ],
+  },
+  {
+    id: 'store_taitea1_nantou_zhongshan',
+    name: '台茶1號',
+    branchName: '南投中山店',
+    phone: '049-2241811',
+    address: '南投市中山街 242 號',
+    region: '中南部價',
+    area: '南投獨立品牌',
+    businessHours: '09:30 - 21:00',
+    isOpenToday: true,
+    tagline: '大甲純手工熬煮芋頭泥 · 鮮芋頭奶綠名店',
+    categories: [
+      {
+        name: '芋頭手工熬煮招牌',
+        items: [
+          { id: 'tt1_1', name: '鮮芋頭奶綠', priceM: 55, priceL: 65 },
+          { id: 'tt1_2', name: '鮮芋頭鮮奶', priceM: 65, priceL: 75 },
+        ],
+      },
+      {
+        name: '鮮奶與特調',
+        items: [
+          { id: 'tt1_3', name: '鮮奶三寶 (芋圓+珍珠+紅豆)', priceM: 50, priceL: 60 },
+          { id: 'tt1_4', name: '翡翠百香蜜', priceM: 45, priceL: 50 },
+        ],
+      },
+      {
+        name: '契作原茶',
+        items: [
+          { id: 'tt1_5', name: '阿里山金萱', priceM: 30, priceL: 35 },
+          { id: 'tt1_6', name: '炭焙烏龍', priceM: 30, priceL: 35 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'tt1_t1', name: '大甲純芋泥', price: 20 },
+      { id: 'tt1_t2', name: '小芋圓', price: 15 },
+      { id: 'tt1_t3', name: '黑糖珍珠', price: 10 },
+      { id: 'tt1_t4', name: '萬丹紅豆', price: 15 },
+    ],
+  },
+
+  // ==========================================
+  // 一、南投市區 (連鎖手搖)
   // ==========================================
   {
     id: 'store_ug_nantou_fuxing',
