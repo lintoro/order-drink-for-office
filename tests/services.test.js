@@ -99,4 +99,18 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
       expect(paramsAdm.get('token')).toBe(adminToken);
     });
   });
+
+  // 5. 文字 / Google 地圖連結菜單解析防呆測試
+  describe('parseMenuFromTextOrUrl - 連結與文字菜單解析', () => {
+    it('輸入空白或未填寫時應拋出明確錯誤提示', async () => {
+      const { parseMenuFromTextOrUrl } = await import('../src/services/geminiService');
+      await expect(parseMenuFromTextOrUrl('')).rejects.toThrow('請輸入 Google 地圖連結、店家名稱或菜單文字');
+      await expect(parseMenuFromTextOrUrl('   ')).rejects.toThrow('請輸入 Google 地圖連結、店家名稱或菜單文字');
+    });
+
+    it('未設定 API Key 時應提示需要輸入金鑰', async () => {
+      const { parseMenuFromTextOrUrl } = await import('../src/services/geminiService');
+      await expect(parseMenuFromTextOrUrl('得正 台北南港店', '')).rejects.toThrow('Google Gemini API Key');
+    });
+  });
 });

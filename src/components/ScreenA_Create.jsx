@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { DEFAULT_STORES } from '../data/defaultStores';
 import { generateAdminToken } from '../utils/calc';
-import { parseMenuImageWithGemini, getGeminiApiKey, setGeminiApiKey } from '../services/geminiService';
+import {
+  parseMenuImageWithGemini,
+  parseMenuFromTextOrUrl,
+  getGeminiApiKey,
+  setGeminiApiKey,
+} from '../services/geminiService';
 import { getCustomStores, saveCustomStore } from '../utils/storage';
 import {
   Store,
@@ -18,6 +23,9 @@ import {
   Download,
   FileJson,
   KeyRound,
+  Link,
+  Globe,
+  FileText,
 } from 'lucide-react';
 
 export default function ScreenA_Create({ onGroupCreated }) {
@@ -41,7 +49,11 @@ export default function ScreenA_Create({ onGroupCreated }) {
   const [menuCategories, setMenuCategories] = useState(currentPreset.categories);
   const [toppings, setToppings] = useState(currentPreset.toppings);
 
-  // AI 圖片辨識狀態
+  // AI 辨識輸入模式切換 ('text' | 'image')
+  const [aiMode, setAiMode] = useState('text');
+  const [textOrUrlInput, setTextOrUrlInput] = useState('');
+
+  // 圖片辨識狀態
   const [menuImage, setMenuImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [isParsing, setIsParsing] = useState(false);
@@ -74,8 +86,8 @@ export default function ScreenA_Create({ onGroupCreated }) {
     }
   };
 
-  // 啟動 Gemini 1.5 Flash 辨識
-  const handleStartAiParsing = async () => {
+  // 1. 啟動圖片 AI 辨識
+  const handleStartImageParsing = async () => {
     if (!menuImage) return;
     const currentKey = getGeminiApiKey();
     if (!currentKey) {
@@ -91,7 +103,37 @@ export default function ScreenA_Create({ onGroupCreated }) {
       setMenuCategories(result.categories);
       setToppings(result.toppings);
       setSelectedStoreId('custom_parsed');
-      setSaveStoreNotice('🎉 辨識成功！品項與價格已自動帶入下方表格。');
+      setSaveStoreNotice('🎉 圖片辨識成功！品項與價格已自動帶入下方表格。');
+      setTimeout(() => setSaveStoreNotice(''), 4000);
+    } catch (err) {
+      console.error(err);
+      setParseError(err.message || '辨識發生錯誤');
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
+  // 2. 啟動 Google 連結 / 店名 / 複製文字 AI 辨識
+  const handleStartTextParsing = async () => {
+    if (!textOrUrlInput.trim()) {
+      alert('請先輸入 Google 地圖店家連結、店名或貼上菜單文字！');
+      return;
+    }
+    const currentKey = getGeminiApiKey();
+    if (!currentKey) {
+      setShowApiKeyModal(true);
+      return;
+    }
+
+    setIsParsing(true);
+    setParseError('');
+    try {
+      const result = await parseMenuFromTextOrUrl(textOrUrlInput);
+      setStoreName(result.storeName);
+      setMenuCategories(result.categories);
+      setToppings(result.toppings);
+      setSelectedStoreId('custom_parsed');
+      setSaveStoreNotice(`🎉 已成功根據「${result.storeName}」生成標準菜單與價格！`);
       setTimeout(() => setSaveStoreNotice(''), 4000);
     } catch (err) {
       console.error(err);
@@ -225,55 +267,133 @@ export default function ScreenA_Create({ onGroupCreated }) {
           </p>
         </div>
 
-        {/* 📸 P3：Gemini Flash 菜單圖片解析區 */}
-        <div className="bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-              <Camera className="w-4 h-4 text-emerald-600" />
-              📸 上傳菜單圖片 (Google Gemini 3.8 Flash 最新智慧辨識)
+        {/* 🤖 P3：Gemini 3.8 Flash 智慧菜單解析區 (雙模式：Google 連結/文字 與 圖片) */}
+        <div className="bg-slate-50 rounded-2xl border-2 border-slate-200 p-4 space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/80 pb-2">
+            <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-emerald-600" />
+              AI 智慧生成菜單 (Google Gemini 3.8 Flash)
             </span>
-            <span className="text-[11px] text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full font-bold">
-              最新旗艦 Flash 模型
-            </span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 items-center">
-            <label className="flex-1 w-full flex items-center justify-center gap-2 py-3 px-4 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer shadow-sm transition-all">
-              <Upload className="w-4 h-4 text-slate-400" />
-              {menuImage ? menuImage.name : '選擇或拍照上傳手搖飲菜單圖片'}
-              <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-            </label>
-
-            {menuImage && (
+            {/* 模式切換按鈕群 */}
+            <div className="flex bg-slate-200/70 p-0.5 rounded-lg text-xs font-bold">
               <button
                 type="button"
-                onClick={handleStartAiParsing}
+                onClick={() => setAiMode('text')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all ${
+                  aiMode === 'text'
+                    ? 'bg-white text-emerald-700 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5" /> 貼 Google 連結 / 文字
+              </button>
+              <button
+                type="button"
+                onClick={() => setAiMode('image')}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all ${
+                  aiMode === 'image'
+                    ? 'bg-white text-emerald-700 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Camera className="w-3.5 h-3.5" /> 拍照 / 上傳圖片
+              </button>
+            </div>
+          </div>
+
+          {/* 模式 A：貼 Google 店家連結 / 店名 / 複製文字 */}
+          {aiMode === 'text' && (
+            <div className="space-y-2.5 animate-in fade-in duration-200">
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-slate-600 block">
+                  貼上 Google 地圖店家分享連結、手搖飲品牌名稱，或任何複製的菜單文字：
+                </label>
+                <textarea
+                  rows={2}
+                  value={textOrUrlInput}
+                  onChange={(e) => setTextOrUrlInput(e.target.value)}
+                  placeholder="例如：貼上 Google Maps 網址 (https://maps.app.goo.gl/...)，或輸入「一沐日 新竹巨城店」，或直接整段貼上店家粉專菜單文字..."
+                  className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-sans text-slate-800"
+                />
+              </div>
+
+              {/* 快速示範熱門點選 */}
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500">
+                <span className="font-bold">快速試用：</span>
+                {['一沐日 新竹巨城', '可不可熟成紅茶', '五桐號 台北信義', '得正 Oolong TEA'].map((demo) => (
+                  <button
+                    type="button"
+                    key={demo}
+                    onClick={() => setTextOrUrlInput(demo)}
+                    className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-2 py-0.5 rounded-md transition-all"
+                  >
+                    + {demo}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleStartTextParsing}
                 disabled={isParsing}
-                className="w-full sm:w-auto px-5 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white text-xs font-bold rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all whitespace-nowrap"
+                className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white text-xs font-bold rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all"
               >
                 {isParsing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Gemini 解析中 (約2~4秒)...
+                    Gemini 3.8 Flash 解析品牌菜單中 (約2秒)...
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    開始 AI 辨識
+                    🚀 AI 智慧生成菜單與價格
                   </>
                 )}
               </button>
-            )}
-          </div>
+            </div>
+          )}
 
-          {imagePreview && (
-            <div className="relative inline-block mt-2">
-              <img
-                src={imagePreview}
-                alt="菜單預覽"
-                className="h-20 w-auto rounded-lg border border-slate-200 object-cover shadow-sm"
-              />
-              <span className="text-[10px] text-slate-400 block mt-1">菜單縮圖已載入</span>
+          {/* 模式 B：拍照 / 上傳圖片 */}
+          {aiMode === 'image' && (
+            <div className="space-y-2.5 animate-in fade-in duration-200">
+              <div className="flex flex-col sm:flex-row gap-2.5 items-center">
+                <label className="flex-1 w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer shadow-sm transition-all">
+                  <Upload className="w-4 h-4 text-slate-400" />
+                  {menuImage ? menuImage.name : '選擇或手機拍照菜單圖片'}
+                  <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+                </label>
+
+                {menuImage && (
+                  <button
+                    type="button"
+                    onClick={handleStartImageParsing}
+                    disabled={isParsing}
+                    className="w-full sm:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white text-xs font-bold rounded-xl shadow-sm flex items-center justify-center gap-1.5 transition-all whitespace-nowrap"
+                  >
+                    {isParsing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Gemini 圖片辨識中...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        開始圖片辨識
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
+              {imagePreview && (
+                <div className="relative inline-block">
+                  <img
+                    src={imagePreview}
+                    alt="菜單預覽"
+                    className="h-16 w-auto rounded-lg border border-slate-200 object-cover shadow-sm"
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -281,6 +401,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
             <div className="text-xs text-red-600 font-bold bg-red-50 p-2.5 rounded-xl border border-red-200">
               ⚠️ {parseError}
               <button
+                type="button"
                 onClick={() => setShowApiKeyModal(true)}
                 className="underline ml-2 text-red-700 font-medium"
               >

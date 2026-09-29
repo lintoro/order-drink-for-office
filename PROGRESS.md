@@ -30,7 +30,8 @@
 
 ### 2. Screen A：主揪開團與菜單設定
 - [x] 歷史店家庫選取下拉選單 (得正、50嵐、麻古預設菜單)
-- [x] Gemini Flash 菜單圖片解析與 JSON 結構化轉換 (`geminiService.js`)
+- [x] Gemini 3.8 Flash 菜單圖片解析與 JSON 結構化轉換 (`geminiService.js`)
+- [x] **Google Maps 店家連結 / 店名 / 複製文字 AI 智慧生成菜單 (`parseMenuFromTextOrUrl`)**
 - [x] 菜單檢視與快速微調表格（支援手動新增/修改價格/刪除）
 - [x] 歷史常用店家庫管理（支援一鍵存庫、匯出 JSON、匯入 JSON 備份）
 - [x] 設定截止時間與預估外送費
