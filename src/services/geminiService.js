@@ -170,18 +170,27 @@ async function callGeminiApi(payloadParts, customApiKey = '') {
     });
   };
 
-  let response = await makeRequest(selectedModel);
+  let usedModel = selectedModel;
+  let response = await makeRequest(usedModel);
 
-  // 自動備援嘗試 gemini-2.5-flash
-  if (!response.ok && response.status === 404 && selectedModel !== 'gemini-2.5-flash') {
-    console.warn(`模型 ${selectedModel} 回傳 404，自動備援切換至 gemini-2.5-flash 嘗試...`);
-    response = await makeRequest('gemini-2.5-flash');
+  // 若遇到任何失敗 (如 503 High Demand、429 配額限制、404 未找到)，自動多層備援嘗試
+  if (!response.ok && usedModel !== 'gemini-2.5-flash') {
+    console.warn(`模型 ${usedModel} 請求未成功 (狀態碼: ${response.status})，自動備援切換至 gemini-2.5-flash 重試...`);
+    usedModel = 'gemini-2.5-flash';
+    response = await makeRequest(usedModel);
+  }
+
+  // 若 gemini-2.5-flash 仍遇到尖峰負載，最後備援嘗試 gemini-1.5-flash
+  if (!response.ok && usedModel !== 'gemini-1.5-flash') {
+    console.warn(`備援模型重試未成功，嘗試最後備援 gemini-1.5-flash...`);
+    usedModel = 'gemini-1.5-flash';
+    response = await makeRequest(usedModel);
   }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     const message = errorData.error?.message || `API 回應錯誤碼: ${response.status}`;
-    throw new Error(`Gemini 辨識失敗 (${selectedModel}): ${message}`);
+    throw new Error(`Gemini 辨識失敗 (${usedModel}): ${message}`);
   }
 
   const result = await response.json();

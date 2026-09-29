@@ -115,10 +115,20 @@ export default function ScreenA_Create({ onGroupCreated }) {
 
   // 2. 啟動 Google 連結 / 店名 / 複製文字 AI 辨識
   const handleStartTextParsing = async () => {
-    if (!textOrUrlInput.trim()) {
+    const rawInput = textOrUrlInput.trim();
+    if (!rawInput) {
       alert('請先輸入 Google 地圖店家連結、店名或貼上菜單文字！');
       return;
     }
+
+    // 智慧偵測：若貼上的是 Google Search Viewer 內部加密連結
+    if (rawInput.includes('google.com/searchviewer') && !rawInput.includes(' ')) {
+      setParseError(
+        '💡 您貼上的是 Google 搜尋預覽的內部加密暫存連結（不含店名文字）。請直接輸入「手搖飲店名」（例如：得正、一沐日、可不可），或改貼 Google Maps 正式分享連結，AI 即可為您生成！'
+      );
+      return;
+    }
+
     const currentKey = getGeminiApiKey();
     if (!currentKey) {
       setShowApiKeyModal(true);
@@ -128,7 +138,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
     setIsParsing(true);
     setParseError('');
     try {
-      const result = await parseMenuFromTextOrUrl(textOrUrlInput);
+      const result = await parseMenuFromTextOrUrl(rawInput);
       setStoreName(result.storeName);
       setMenuCategories(result.categories);
       setToppings(result.toppings);
