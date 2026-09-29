@@ -12,6 +12,9 @@ import {
   ShoppingBag,
   ShieldCheck,
   Radio,
+  Phone,
+  MapPin,
+  CalendarCheck,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -158,8 +161,36 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
 
         <div className="flex items-baseline justify-between pt-1">
           <div>
-            <h2 className="text-2xl font-black">{groupData?.storeName || '今日手搖團購'}</h2>
-            <p className="text-xs text-emerald-100 mt-0.5">免在公務群洗版，點餐與查帳一手搞定！</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-2xl font-black">{groupData?.storeName || '今日手搖團購'}</h2>
+              {groupData?.branchName && (
+                <span className="text-xs bg-emerald-800/80 px-2.5 py-0.5 rounded-full font-bold text-emerald-100 flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  {groupData.branchName}
+                </span>
+              )}
+              {groupData?.region && (
+                <span className="text-[11px] bg-amber-400 text-amber-950 px-2 py-0.5 rounded-full font-black">
+                  {groupData.region}
+                </span>
+              )}
+            </div>
+
+            {/* 分店電話與營業狀態 */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-emerald-100 mt-1.5">
+              {groupData?.phone && (
+                <span className="flex items-center gap-1 font-medium">
+                  <Phone className="w-3.5 h-3.5 text-emerald-200" />
+                  {groupData.phone}
+                </span>
+              )}
+              {groupData?.businessHours && (
+                <span className="flex items-center gap-1">
+                  <CalendarCheck className="w-3.5 h-3.5 text-emerald-200" />
+                  {groupData.isOpenToday === false ? '🔴 標記公休' : `營業中: ${groupData.businessHours}`}
+                </span>
+              )}
+            </div>
           </div>
           <div className="text-right">
             <span className="text-3xl font-black">{totalCups}</span>
@@ -167,6 +198,14 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
           </div>
         </div>
       </div>
+
+      {/* 公休特別警示條 */}
+      {groupData?.isOpenToday === false && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-xs px-4 py-2.5 rounded-xl font-bold flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+          <span>⚠️ 提醒：本分店可能今日公休或非營業時段，送單前請確認！</span>
+        </div>
+      )}
 
       {/* 🌟 飲料已送達：置頂顯示「個人取餐卡」 */}
       {groupData?.status === 'arrived' && myOrder && (

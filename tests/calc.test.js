@@ -145,6 +145,29 @@ describe('核心計算與業務防呆單元測試 (calc.test.js)', () => {
       expect(summary).toContain('總計杯數：3 杯 ｜ 點餐人數：3 人');
       expect(summary).toContain('外送費：$40 ｜ 預估全單應付總額：$215');
     });
+
+    it('支援包含分店名稱、電話、定價分區與營業狀態之下單彙整', () => {
+      const orders = [
+        {
+          userName: '同事A',
+          items: [{ itemName: '烏龍綠茶', size: '大杯', price: 35, ice: '微冰', sugar: '微糖' }],
+        },
+      ];
+      const extraInfo = {
+        branchName: '南投南陽店',
+        phone: '049-2236388',
+        region: '中南部價',
+        businessHours: '09:30 - 21:30',
+        isOpenToday: true,
+      };
+
+      const summary = aggregateOrderSummary('清心福全', orders, 0, extraInfo);
+      expect(summary).toContain('【清心福全 (南投南陽店) - 電話下單彙整單】');
+      expect(summary).toContain('分店電話：049-2236388');
+      expect(summary).toContain('定價分區：中南部價');
+      expect(summary).toContain('營業狀態：09:30 - 21:30');
+      expect(summary).toContain('烏龍綠茶 (大杯) (共 1 杯)');
+    });
   });
 
   // 5. Admin Token

@@ -64,7 +64,15 @@ export function fileToBase64(file) {
 const MENU_RESPONSE_SCHEMA = {
   type: 'OBJECT',
   properties: {
-    storeName: { type: 'STRING', description: '店家名稱' },
+    storeName: { type: 'STRING', description: '店家品牌名稱，例如：清心福全、得正、50嵐' },
+    branchName: { type: 'STRING', description: '具體分店名稱，例如：南投南陽店、信義店。若無法判斷請填空字串' },
+    phone: { type: 'STRING', description: '分店訂購電話，例如：049-2236388 或 02-27221234' },
+    region: {
+      type: 'STRING',
+      description: '適用之定價分區（依所在縣市判定，例如：中南部價、北部價、全台均一價、東部/離島）',
+    },
+    isOpenToday: { type: 'BOOLEAN', description: '今日是否營業' },
+    businessHours: { type: 'STRING', description: '今日營業時間或營業狀態，例如：09:30 - 21:30' },
     categories: {
       type: 'ARRAY',
       items: {
@@ -124,6 +132,11 @@ function formatParsedMenuData(parsedData) {
 
   return {
     storeName: parsedData.storeName || '自訂手搖飲',
+    branchName: parsedData.branchName || '',
+    phone: parsedData.phone || '',
+    region: parsedData.region || '中南部價',
+    isOpenToday: parsedData.isOpenToday !== undefined ? parsedData.isOpenToday : true,
+    businessHours: parsedData.businessHours || '09:30 - 21:30',
     categories: formattedCategories,
     toppings:
       formattedToppings.length > 0
@@ -209,14 +222,17 @@ async function callGeminiApi(payloadParts, customApiKey = '') {
 export async function parseMenuImageWithGemini(imageFile, customApiKey = '') {
   const imageData = await fileToBase64(imageFile);
 
-  const prompt = `你是一個專業的手搖飲菜單解析專家。請仔細辨識這張手搖飲料菜單圖片中的資訊。
+  const prompt = `你是一個專業的台灣手搖飲菜單解析專家。請仔細辨識這張手搖飲料菜單圖片中的資訊。
 請注意：
-1. 找出店家名稱 (storeName)。
-2. 將所有飲料依類別分類 (categories)，每一類包含多個品項 (items)。
-3. 每個品項請解析出名稱 (name)、中杯價格 (priceM) 與大杯價格 (priceL)。若只有單一容量價格，請將 priceM 與 priceL 都設為該金額。
-4. 找出常見加料選單 (toppings) 及其加價 (price)。若菜單未特別列出加料，請至少提供常見的「珍珠/波霸 (10元)」、「椰果 (10元)」。
-5. 價格必須為純整數數字 (NT$)。
-6. 請使用正體中文 (台灣常用用語)。`;
+1. 找出店家品牌名稱 (storeName) 與分店名稱 (branchName，若圖片有註明分店名或門市名稱)。
+2. 找出分店訂購電話 (phone，若菜單有印門市電話號碼)。
+3. 判斷定價分區 (region：北部價 / 中南部價 / 全台均一價 / 東部離島)。
+4. 判斷營業時間 (businessHours，若圖片有營業時間資訊) 與今日是否營業 (isOpenToday)。
+5. 將所有飲料依類別分類 (categories)，每一類包含多個品項 (items)。
+6. 每個品項請解析出名稱 (name)、中杯價格 (priceM) 與大杯價格 (priceL)。若只有單一容量價格，請將 priceM 與 priceL 都設為該金額。
+7. 找出常見加料選單 (toppings) 及其加價 (price)。若菜單未特別列出加料，請至少提供常見的「珍珠/波霸 (10元)」、「椰果 (10元)」。
+8. 價格必須為純整數數字 (NT$)。
+9. 請使用正體中文 (台灣常用用語)。`;
 
   const parts = [
     { text: prompt },
@@ -242,8 +258,8 @@ export async function parseMenuFromTextOrUrl(inputText, customApiKey = '') {
   }
 
   const prompt = `你是一個專業的台灣手搖飲料專家與菜單解析工具。使用者提供了以下資訊，內容可能是：
-1. Google 地圖店家分享連結或店家文字 (例如 maps.app.goo.gl/... 或包含地址店名的文字)
-2. 台灣手搖飲店家品牌名稱 (例如「得正 台北南港店」、「一沐日 新竹巨城」、「可不可熟成紅茶」)
+1. Google 地圖店家分享連結、店家網址或包含店名地址電話的文字
+2. 台灣手搖飲店家品牌與分店名稱 (例如「清心福全 南投南陽店」、「得正 台北南港店」、「50嵐 台南中正店」)
 3. 從店家官方網站、社群粉專、外送平台或通訊軟體複製貼上的菜單文字
 
 使用者提供的輸入內容如下：
@@ -252,14 +268,21 @@ ${inputText.trim()}
 """
 
 請執行以下解析任務：
-1. 識別並提取店家品牌名稱 (storeName)，若為連鎖品牌請提取完整的品牌名稱（如「得正 Oolong TEA」、「一沐日」）。
-2. 將所有飲品依類別分類 (categories，如「原茶系列」、「鮮奶茶系列」、「奶蓋系列」、「鮮果茶」等)，每一類包含多個品項 (items)。
-3. 每個品項包含：名稱 (name)、中杯價格 (priceM)、大杯價格 (priceL)。
-   - 若使用者輸入的是手搖飲品牌名稱或 Google Maps 連結，請直接調用你對該台灣手搖飲品牌的完整真實知識庫，列出該品牌最受歡迎與標誌性的 10~25 款熱門品項及其最新標準售價！
-   - 若為貼上的文字內容，請從文字中精準萃取品項與價格。若只有單一容量價格，請將中杯與大杯都填該金額。
-4. 列出該品牌專屬或常見的加料選單 (toppings，如粉粿、波霸、茶凍、椰果、珍珠) 及其加價。
-5. 價格必須為純整數 (NT$)，不帶貨幣符號。
-6. 一律使用正體中文（台灣用語）。`;
+1. 識別並提取店家品牌名稱 (storeName，如「清心福全」) 與具體分店名稱 (branchName，如「南投南陽店」)。
+2. 提取或查證該分店的訂購電話 (phone，例如 049-2236388、02-27221234 等標準市話或手機格式)。若已知該分店電話請精確提供；若完全未知請留空字串。
+3. 嚴格判定南北地區定價分區 (region)：
+   - 台灣手搖飲（如清心福全、50嵐、可不可、得正等）存在顯著的南北分區定價差異！
+   - 北部地區（基隆、台北、新北、桃園、新竹）通常適用「北部價」（通常每杯高 5 元左右）。
+   - 中南部與東部地區（苗栗以南包含台中、彰化、南投、雲林、嘉義、台南、高雄、屏東、宜花東）通常適用「中南部價」。
+   - 若為全國統一定價品牌，標註「全台均一價」。
+   - 請根據該分店所在縣市，在各品項價格 (priceM, priceL) 中精準輸出該分店所在分區之真實價格，絕對不可混用錯誤區域價格！
+4. 查證該分店今日營業時間 (businessHours，例如「09:00 - 21:30」) 與今日是否營業 (isOpenToday，布林值)。
+5. 將飲品依類別分類 (categories，如「原茶系列」、「鮮奶茶系列」、「奶茶系列」、「鮮果茶」等)，每一類包含多個品項 (items)。
+   - 列出該分店/品牌最受歡迎與經典的熱門品項及其對應區域之精準售價！
+   - 若為貼上的文字內容，請從文字中精準萃取品項與價格。
+6. 列出該品牌專屬或常見的加料選單 (toppings，如珍珠、波霸、椰果、茶凍、粉粿) 及其加價。
+7. 價格必須為純整數 (NT$)，不帶貨幣符號。
+8. 一律使用正體中文（台灣繁體用語）。`;
 
   const parts = [{ text: prompt }];
   return callGeminiApi(parts, customApiKey);

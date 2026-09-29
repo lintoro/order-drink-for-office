@@ -5,6 +5,11 @@ export const DEFAULT_STORES = [
   {
     id: 'store_dezheng',
     name: '得正 Oolong TEA Project',
+    branchName: '台中向上南店',
+    phone: '04-24726588',
+    region: '中南部價',
+    businessHours: '10:00 - 20:30',
+    isOpenToday: true,
     tagline: '專注烏龍茶焙火香氣',
     categories: [
       {
@@ -40,6 +45,11 @@ export const DEFAULT_STORES = [
   {
     id: 'store_50lan',
     name: '50嵐',
+    branchName: '台北信義店',
+    phone: '02-27221234',
+    region: '北部價',
+    businessHours: '10:00 - 21:30',
+    isOpenToday: true,
     tagline: '經典手搖台灣國民茶飲',
     categories: [
       {
@@ -68,6 +78,11 @@ export const DEFAULT_STORES = [
   {
     id: 'store_macu',
     name: '麻古茶坊 MACU',
+    branchName: '高雄裕誠店',
+    phone: '07-5566789',
+    region: '中南部價',
+    businessHours: '09:30 - 22:00',
+    isOpenToday: true,
     tagline: '新鮮果粒茶與芝芝系列',
     categories: [
       {

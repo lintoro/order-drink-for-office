@@ -20,6 +20,10 @@ import {
   Radio,
   Share2,
   ExternalLink,
+  Phone,
+  PhoneCall,
+  MapPin,
+  CalendarCheck,
 } from 'lucide-react';
 
 export default function ScreenC_Admin({
@@ -28,6 +32,8 @@ export default function ScreenC_Admin({
   isAuthorized = true,
 }) {
   const [copyMsg, setCopyMsg] = useState('');
+  const [editingPhone, setEditingPhone] = useState(groupData?.phone || '');
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
   const isCloud = isCloudModeEnabled();
 
   if (!groupData) {
@@ -86,11 +92,18 @@ export default function ScreenC_Admin({
   const pickedCount = ordersWithCalculatedAmount.filter((o) => o.isPicked).length;
   const unpaidCount = ordersWithCalculatedAmount.filter((o) => !o.isPaid).length;
 
-  // 聚合下單清單
+  // 聚合下單清單 (整合分店、電話、定價分區與營業狀態)
   const orderSummaryText = aggregateOrderSummary(
     groupData.storeName,
     orders,
-    groupData.deliveryFee
+    groupData.deliveryFee,
+    {
+      branchName: groupData.branchName,
+      phone: groupData.phone,
+      region: groupData.region,
+      businessHours: groupData.businessHours,
+      isOpenToday: groupData.isOpenToday,
+    }
   );
 
   // 切換已付款狀態 (P4 即時寫入)
@@ -256,6 +269,106 @@ export default function ScreenC_Admin({
           )}
         </div>
       )}
+
+      {/* 📞 門市訂購與一鍵撥號卡片 */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-slate-800 flex items-center gap-1.5">
+                <PhoneCall className="w-4 h-4 text-emerald-600" />
+                {groupData.storeName}
+                {groupData.branchName && (
+                  <span className="text-emerald-700 font-bold">({groupData.branchName})</span>
+                )}
+              </h3>
+              {groupData.region && (
+                <span className="text-[11px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full border border-amber-200">
+                  {groupData.region}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+              <span className="flex items-center gap-1">
+                <CalendarCheck className="w-3.5 h-3.5 text-slate-400" />
+                {groupData.isOpenToday === false ? '🔴 今日標記公休' : `今日營業: ${groupData.businessHours || '09:30 - 21:30'}`}
+              </span>
+            </div>
+          </div>
+
+          {/* 電話撥打與複製區 */}
+          <div className="flex items-center gap-2">
+            {groupData.phone ? (
+              <>
+                <a
+                  href={`tel:${groupData.phone}`}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5 transition-all"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  一鍵撥打門市電話 ({groupData.phone})
+                </a>
+                <button
+                  type="button"
+                  onClick={() => copyText(groupData.phone, '已複製分店電話號碼！')}
+                  className="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1"
+                >
+                  <Copy className="w-3 h-3" />
+                  複製號碼
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditingPhone(!isEditingPhone)}
+                  className="text-xs text-slate-400 hover:text-slate-600 underline"
+                >
+                  修改
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsEditingPhone(true)}
+                className="px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold rounded-lg hover:bg-amber-100 transition-all flex items-center gap-1"
+              >
+                <Phone className="w-3.5 h-3.5 text-amber-600" />
+                + 補充門市訂購電話
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* 門市電話即時修改輸入框 */}
+        {isEditingPhone && (
+          <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-600">分店電話：</span>
+            <input
+              type="text"
+              value={editingPhone}
+              onChange={(e) => setEditingPhone(e.target.value)}
+              placeholder="例如：049-2236388"
+              className="px-2.5 py-1 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                onUpdateGroup({ ...groupData, phone: editingPhone.trim() });
+                setIsEditingPhone(false);
+                setCopyMsg('門市電話已儲存！');
+                setTimeout(() => setCopyMsg(''), 2500);
+              }}
+              className="px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-bold"
+            >
+              儲存
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsEditingPhone(false)}
+              className="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs"
+            >
+              取消
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* 電話下單彙整文字 (1-A 規格合併) */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-3">

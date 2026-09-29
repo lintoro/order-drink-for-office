@@ -98,11 +98,18 @@ export function upsertUserOrder(existingOrders = [], newOrder) {
  * @param {string} storeName - 店家名稱
  * @param {Array<object>} orders - 點餐清單
  * @param {number} totalDeliveryFee - 外送費
+ * @param {object} [extraInfo={}] - 額外分店資訊 (branchName, phone, region, businessHours, isOpenToday)
  * @returns {string} 格式化可一鍵複製的電話下單文字
  */
-export function aggregateOrderSummary(storeName = '手搖飲料', orders = [], totalDeliveryFee = 0) {
+export function aggregateOrderSummary(storeName = '手搖飲料', orders = [], totalDeliveryFee = 0, extraInfo = {}) {
+  const fullStoreTitle = extraInfo.branchName ? `${storeName} (${extraInfo.branchName})` : storeName;
+
   if (!orders || orders.length === 0) {
-    return `【${storeName} - 電話下單彙整單】\n目前尚無任何點餐資料。`;
+    let emptyLines = [`【${fullStoreTitle} - 電話下單彙整單】`];
+    if (extraInfo.phone) emptyLines.push(`分店電話：${extraInfo.phone}`);
+    if (extraInfo.region) emptyLines.push(`定價分區：${extraInfo.region}`);
+    emptyLines.push('目前尚無任何點餐資料。');
+    return emptyLines.join('\n');
   }
 
   // 1. 依「品項名稱 + 容量」歸類
@@ -130,7 +137,16 @@ export function aggregateOrderSummary(storeName = '手搖飲料', orders = [], t
 
   // 2. 組裝清單文字
   let lines = [];
-  lines.push(`【${storeName} - 電話下單彙整單】`);
+  lines.push(`【${fullStoreTitle} - 電話下單彙整單】`);
+  if (extraInfo.phone) {
+    lines.push(`分店電話：${extraInfo.phone}`);
+  }
+  if (extraInfo.region) {
+    lines.push(`定價分區：${extraInfo.region}`);
+  }
+  if (extraInfo.businessHours) {
+    lines.push(`營業狀態：${extraInfo.businessHours}`);
+  }
   lines.push(`下單時間：${new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })}`);
   lines.push('----------------------------------------');
 

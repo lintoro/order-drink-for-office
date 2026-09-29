@@ -26,6 +26,10 @@ import {
   Link,
   Globe,
   FileText,
+  Phone,
+  MapPin,
+  CalendarCheck,
+  ArrowUpDown,
 } from 'lucide-react';
 
 export default function ScreenA_Create({ onGroupCreated }) {
@@ -46,6 +50,13 @@ export default function ScreenA_Create({ onGroupCreated }) {
   // 取得選中之菜單資料以供客製編輯
   const currentPreset = allStores.find((s) => s.id === selectedStoreId) || DEFAULT_STORES[0];
   const [storeName, setStoreName] = useState(currentPreset.name);
+  const [branchName, setBranchName] = useState(currentPreset.branchName || '');
+  const [phone, setPhone] = useState(currentPreset.phone || '');
+  const [region, setRegion] = useState(currentPreset.region || '中南部價');
+  const [businessHours, setBusinessHours] = useState(currentPreset.businessHours || '09:30 - 21:30');
+  const [isOpenToday, setIsOpenToday] = useState(
+    currentPreset.isOpenToday !== undefined ? currentPreset.isOpenToday : true
+  );
   const [menuCategories, setMenuCategories] = useState(currentPreset.categories);
   const [toppings, setToppings] = useState(currentPreset.toppings);
 
@@ -71,9 +82,37 @@ export default function ScreenA_Create({ onGroupCreated }) {
     const store = allStores.find((s) => s.id === storeId);
     if (store) {
       setStoreName(store.name);
+      setBranchName(store.branchName || '');
+      setPhone(store.phone || '');
+      setRegion(store.region || '中南部價');
+      setBusinessHours(store.businessHours || '09:30 - 21:30');
+      setIsOpenToday(store.isOpenToday !== undefined ? store.isOpenToday : true);
       setMenuCategories(store.categories);
       setToppings(store.toppings || []);
     }
+  };
+
+  // 南北分區價格批次切換 (每杯 ±5 元微調)
+  const handleAdjustRegionPrice = (targetRegion) => {
+    if (targetRegion === region) return;
+    const isTargetNorth = targetRegion === '北部價';
+    const delta = isTargetNorth ? 5 : -5;
+
+    const updatedCategories = menuCategories.map((cat) => ({
+      ...cat,
+      items: cat.items.map((item) => ({
+        ...item,
+        priceM: Math.max(10, item.priceM + delta),
+        priceL: Math.max(15, item.priceL + delta),
+      })),
+    }));
+
+    setMenuCategories(updatedCategories);
+    setRegion(targetRegion);
+    setSaveStoreNotice(
+      `✓ 已切換為「${targetRegion}」，所有品項價格已自動 ${delta > 0 ? '+5' : '-5'} 元！`
+    );
+    setTimeout(() => setSaveStoreNotice(''), 3500);
   };
 
   // 處理菜單圖片上傳
@@ -100,10 +139,15 @@ export default function ScreenA_Create({ onGroupCreated }) {
     try {
       const result = await parseMenuImageWithGemini(menuImage);
       setStoreName(result.storeName);
+      setBranchName(result.branchName || '');
+      setPhone(result.phone || '');
+      setRegion(result.region || '中南部價');
+      setBusinessHours(result.businessHours || '09:30 - 21:30');
+      setIsOpenToday(result.isOpenToday !== undefined ? result.isOpenToday : true);
       setMenuCategories(result.categories);
       setToppings(result.toppings);
       setSelectedStoreId('custom_parsed');
-      setSaveStoreNotice('🎉 圖片辨識成功！品項與價格已自動帶入下方表格。');
+      setSaveStoreNotice(`🎉 圖片辨識成功！已帶入「${result.storeName} ${result.branchName || ''}」菜單與${result.region || '分區'}價格。`);
       setTimeout(() => setSaveStoreNotice(''), 4000);
     } catch (err) {
       console.error(err);
@@ -124,7 +168,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
     // 智慧偵測：若貼上的是 Google Search Viewer 內部加密連結
     if (rawInput.includes('google.com/searchviewer') && !rawInput.includes(' ')) {
       setParseError(
-        '💡 您貼上的是 Google 搜尋預覽的內部加密暫存連結（不含店名文字）。請直接輸入「手搖飲店名」（例如：得正、一沐日、可不可），或改貼 Google Maps 正式分享連結，AI 即可為您生成！'
+        '💡 您貼上的是 Google 搜尋預覽的內部加密暫存連結（不含店名文字）。請直接輸入「手搖飲店名」（例如：清心福全 南投南陽店、得正、一沐日），或改貼 Google Maps 正式分享連結，AI 即可為您精準提取分店電話與南北定價！'
       );
       return;
     }
@@ -140,11 +184,18 @@ export default function ScreenA_Create({ onGroupCreated }) {
     try {
       const result = await parseMenuFromTextOrUrl(rawInput);
       setStoreName(result.storeName);
+      setBranchName(result.branchName || '');
+      setPhone(result.phone || '');
+      setRegion(result.region || '中南部價');
+      setBusinessHours(result.businessHours || '09:30 - 21:30');
+      setIsOpenToday(result.isOpenToday !== undefined ? result.isOpenToday : true);
       setMenuCategories(result.categories);
       setToppings(result.toppings);
       setSelectedStoreId('custom_parsed');
-      setSaveStoreNotice(`🎉 已成功根據「${result.storeName}」生成標準菜單與價格！`);
-      setTimeout(() => setSaveStoreNotice(''), 4000);
+      setSaveStoreNotice(
+        `🎉 已成功識別「${result.storeName} ${result.branchName || ''}」！適用【${result.region || '分區定價'}】，電話：${result.phone || '無'}`
+      );
+      setTimeout(() => setSaveStoreNotice(''), 5000);
     } catch (err) {
       console.error(err);
       setParseError(err.message || '辨識發生錯誤');
@@ -158,14 +209,19 @@ export default function ScreenA_Create({ onGroupCreated }) {
     const newStorePreset = {
       id: 'store_custom_' + Date.now(),
       name: storeName.trim() || '自訂店家',
-      tagline: '歷史自訂菜單',
+      branchName: branchName.trim(),
+      phone: phone.trim(),
+      region: region.trim(),
+      businessHours: businessHours.trim(),
+      isOpenToday,
+      tagline: `${region || '分區'} · ${branchName || '自訂分店'}`,
       categories: menuCategories,
       toppings: toppings,
     };
     saveCustomStore(newStorePreset);
     const updated = getCustomStores();
     setCustomStores(updated);
-    setSaveStoreNotice(`✓ 已成功將「${newStorePreset.name}」存入常用店家庫！`);
+    setSaveStoreNotice(`✓ 已成功將「${newStorePreset.name} (${newStorePreset.branchName || '分店'})」存入常用店家庫！`);
     setTimeout(() => setSaveStoreNotice(''), 3000);
   };
 
@@ -240,6 +296,11 @@ export default function ScreenA_Create({ onGroupCreated }) {
       orderId,
       adminToken,
       storeName: storeName.trim() || '手搖飲團購',
+      branchName: branchName.trim(),
+      phone: phone.trim(),
+      region: region.trim(),
+      businessHours: businessHours.trim(),
+      isOpenToday,
       deadline,
       deliveryFee: Number(deliveryFee) || 0,
       categories: menuCategories,
@@ -454,16 +515,134 @@ export default function ScreenA_Create({ onGroupCreated }) {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                開團店家名稱
+                開團店家品牌
               </label>
               <input
                 type="text"
                 value={storeName}
                 onChange={(e) => setStoreName(e.target.value)}
                 required
-                placeholder="例如：得正、五十嵐"
+                placeholder="例如：清心福全、得正、50嵐"
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
+            </div>
+          </div>
+
+          {/* 📍 新增：分店詳細資訊、訂購電話、南北分區定價與營業時間 */}
+          <div className="bg-slate-50/80 border border-slate-200 rounded-xl p-3.5 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                特定分店資訊與定價分區 (防呆校正)
+              </span>
+              <span className="text-[11px] text-slate-400">
+                主揪結單下單必備，避免送錯門市或算錯南北價
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* 分店名稱 */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  分店名稱 / 門市
+                </label>
+                <input
+                  type="text"
+                  value={branchName}
+                  onChange={(e) => setBranchName(e.target.value)}
+                  placeholder="例如：南投南陽店、信義店"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              {/* 分店電話 */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
+                  <Phone className="w-3 h-3 text-slate-400" />
+                  分店訂購電話
+                </label>
+                <input
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="例如：049-2236388、02-27221234"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* 定價分區切換與營業時間 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-200/60">
+              {/* 定價分區 */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center justify-between">
+                  <span>適用定價分區</span>
+                  <span className="text-[10px] text-emerald-600">
+                    目前：{region}
+                  </span>
+                </label>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleAdjustRegionPrice('中南部價')}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
+                      region === '中南部價'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    中南部價
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAdjustRegionPrice('北部價')}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
+                      region === '北部價'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    北部價 (+5)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRegion('全台均一價')}
+                    className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all ${
+                      region === '全台均一價'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    均一價
+                  </button>
+                </div>
+              </div>
+
+              {/* 營業時間與營業狀態 */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <CalendarCheck className="w-3 h-3 text-slate-400" />
+                    今日營業狀態
+                  </span>
+                  <label className="flex items-center gap-1 cursor-pointer text-[10px]">
+                    <input
+                      type="checkbox"
+                      checked={isOpenToday}
+                      onChange={(e) => setIsOpenToday(e.target.checked)}
+                      className="accent-emerald-600"
+                    />
+                    <span>{isOpenToday ? '🟢 今日有營業' : '🔴 今日公休'}</span>
+                  </label>
+                </label>
+                <input
+                  type="text"
+                  value={businessHours}
+                  onChange={(e) => setBusinessHours(e.target.value)}
+                  placeholder="例如：09:30 - 21:30"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+              </div>
             </div>
           </div>
 
@@ -606,20 +785,26 @@ export default function ScreenA_Create({ onGroupCreated }) {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-700">📢 貼入 LINE 公務群組訊息 (一般同仁)</span>
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    const branchText = createdResult.branchName ? ` (${createdResult.branchName})` : '';
+                    const regionText = createdResult.region ? `【${createdResult.region}】` : '';
+                    const phoneText = createdResult.phone ? `\n📞 分店電話：${createdResult.phone}` : '';
                     copyToClipboard(
-                      `🥤【辦公室訂飲料】今天喝 ${createdResult.storeName}！\n⏰ 截止時間：${createdResult.deadline}\n👉 請點選網址填單（請勿在群組+1）：\n${createdResult.publicUrl}`,
+                      `🥤【辦公室訂飲料】今天喝 ${createdResult.storeName}${branchText}！${regionText}\n⏰ 截止時間：${createdResult.deadline}${phoneText}\n👉 請點選網址填單（請勿在群組+1洗版）：\n${createdResult.publicUrl}`,
                       '已複製公務群通知文字！'
-                    )
-                  }
+                    );
+                  }}
                   className="text-xs text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-1"
                 >
                   <Copy className="w-3.5 h-3.5" /> 一鍵複製通知
                 </button>
               </div>
               <p className="text-xs text-slate-500 font-mono bg-slate-50 p-2 rounded border border-slate-100 break-all">
-                🥤【辦公室訂飲料】今天喝 {createdResult.storeName}！<br />
-                ⏰ 截止時間：{createdResult.deadline}<br />
+                🥤【辦公室訂飲料】今天喝 {createdResult.storeName}
+                {createdResult.branchName && ` (${createdResult.branchName})`}！
+                {createdResult.region && `【${createdResult.region}】`}<br />
+                ⏰ 截止時間：{createdResult.deadline}
+                {createdResult.phone && ` ｜ 📞 ${createdResult.phone}`}<br />
                 👉 請點選網址填單：{createdResult.publicUrl}
               </p>
             </div>

@@ -39,20 +39,29 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
 
       const store = {
         id: 'store_test_01',
-        name: '一沐日',
-        categories: [{ name: '粉粿系列', items: [{ name: '逮丸奶茶', priceM: 60, priceL: 70 }] }],
+        name: '清心福全',
+        branchName: '南投南陽店',
+        phone: '049-2236388',
+        region: '中南部價',
+        businessHours: '09:30 - 21:30',
+        isOpenToday: true,
+        categories: [{ name: '原茶類', items: [{ name: '烏龍綠茶', priceM: 30, priceL: 35 }] }],
       };
 
       saveCustomStore(store);
       const stores = getCustomStores();
       expect(stores.length).toBe(1);
-      expect(stores[0].name).toBe('一沐日');
-      expect(stores[0].categories[0].items[0].name).toBe('逮丸奶茶');
+      expect(stores[0].name).toBe('清心福全');
+      expect(stores[0].branchName).toBe('南投南陽店');
+      expect(stores[0].phone).toBe('049-2236388');
+      expect(stores[0].region).toBe('中南部價');
+      expect(stores[0].businessHours).toBe('09:30 - 21:30');
+      expect(stores[0].categories[0].items[0].name).toBe('烏龍綠茶');
     });
 
     it('相同 ID 的店家儲存時應覆蓋更新而不重複累積', () => {
-      const store1 = { id: 's1', name: '可不可' };
-      const store2 = { id: 's1', name: '可不可熟成紅茶 (已改版)' };
+      const store1 = { id: 's1', name: '可不可', branchName: '台中一中店', region: '中南部價' };
+      const store2 = { id: 's1', name: '可不可熟成紅茶 (已改版)', branchName: '台中一中店', region: '中南部價' };
 
       saveCustomStore(store1);
       saveCustomStore(store2);
