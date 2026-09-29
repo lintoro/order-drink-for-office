@@ -13,7 +13,7 @@
 | **Milestone 2** | 核心計算與狀態邏輯 | ✅ 已完成 | 2026-09-29 | 外送費無條件進位平攤、同暱稱覆蓋、下單文字聚合，10 項單元測試 100% 通過 |
 | **Milestone 3** | Gemini Flash 菜單辨識與店家庫 | ✅ 已完成 | 2026-09-29 | 支援相機拍照/圖片解析、結構化 JSON Schema、常用店家庫匯出/匯入備份 |
 | **Milestone 4** | 雲端即時同步與雙網址實測 | ✅ 已完成 | 2026-09-29 | 接入 Firebase Firestore 永不休眠架構、雙網址 Token 路由隔離、16 項測試通過 |
-| **Milestone 5** | 部署發布與使用者驗收 (UAT) | ⏳ 待啟動 | - | 部署至 Cloudflare Pages / Vercel，辦公室實機跟單壓力測試 |
+| **Milestone 5** | 部署發布與使用者驗收 (UAT) | 🚀 部署中 | 2026-09-29 | 建置 GitHub Actions 自動部署工作流程，發布至 GitHub Pages |
 
 ---
 
@@ -26,7 +26,9 @@
 - [x] Git 過濾設定 (`.gitignore`)
 - [x] 環境變數範本 (`.env.example`)
 - [x] 前端專案環境建置 (Vite 6 + React 18 + Tailwind CSS)
-- [x] 自動化測試環境建置 (Vitest 16 項單元測試全數通過)
+- [x] 自動化測試環境建置 (Vitest 25 項單元測試全數通過)
+- [x] **GitHub Actions 自動構建部署工作流程 (`.github/workflows/deploy.yml`)**
+- [x] **Vite 相對路徑配置 (`base: './'`) 支援 GitHub Pages 子目錄加載**
 
 ### 2. Screen A：主揪開團與菜單設定
 - [x] 歷史店家庫選取下拉選單 (得正、50嵐、麻古預設菜單，含分店與分區屬性)
@@ -78,3 +80,8 @@
   - 完成 **Firebase Firestore 雲端即時同步** (`firebaseService.js` + `syncService.js`)，支援雙模運作（無配置時平滑降級為本機跨分頁即時同步）。
   - 實作 URL 查詢參數原生路由分發（`?order=...` 與 `?token=...`），提供嚴格 Admin Token 權限隔離。
   - 完成 16 項單元測試 100% 通過與生產環境編譯打包。
+- **2026-09-29 (南投 51 間手搖名店庫擴充 & GitHub Pages 部署工作流程上線)**：
+  - 建立南投在地 51 間實體門市手搖飲資料庫（涵蓋南投獨立品牌 10 家、南投市區 19 家、南崗工業區 6 家、中興新村 3 家、草屯商圈 13 家）。
+  - 全店嚴格配賦真實門市電話、地址、營業時間與中南部標準價格，支援 7 天本地快取與門市歇業防呆。
+  - 單元測試由 16 項擴充至 25 項，全數 100% 通過。
+  - 完成 GitHub Actions 自動化部署工作流程 (`deploy.yml`)，推送至 main 分支自動進行測試、構建並發布至 GitHub Pages。
