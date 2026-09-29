@@ -4,24 +4,18 @@
  */
 
 export const SUPPORTED_MODELS = [
-  { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (目前官方推薦主力，穩定秒級輸出)' },
-  { id: 'gemini-2.0-flash', name: 'Gemini 2.0 Flash (經典高速版本，高穩定備援)' },
-  { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash (最新預覽，若遇尖峰排隊自動備援)' },
+  { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash (Google 官方標準 Flash 模型)' },
 ];
 
 /**
- * 取得當前設定之 Gemini 模型名稱 (預設穩定 gemini-2.5-flash)
+ * 取得當前設定之 Gemini 模型名稱 (固定使用 Google 官方指定 gemini-3.8-flash)
  */
 export function getGeminiModel() {
-  return localStorage.getItem('drink_order_gemini_model') || 'gemini-2.5-flash';
+  return 'gemini-3.8-flash';
 }
 
-export function setGeminiModel(modelId) {
-  if (modelId && modelId.trim()) {
-    localStorage.setItem('drink_order_gemini_model', modelId.trim());
-  } else {
-    localStorage.removeItem('drink_order_gemini_model');
-  }
+export function setGeminiModel() {
+  // 固定使用官方標準 gemini-3.8-flash
 }
 
 /**
@@ -170,27 +164,28 @@ async function callGeminiApi(payloadParts, customApiKey = '') {
     });
   };
 
-  let usedModel = selectedModel;
-  let response = await makeRequest(usedModel);
+  let response;
+  let attempts = 0;
+  const maxAttempts = 2; // 最多重試 2 次
 
-  // 若遇到任何失敗 (如 503 High Demand、429 配額限制、404 未找到)，自動多層備援嘗試
-  if (!response.ok && usedModel !== 'gemini-2.5-flash') {
-    console.warn(`模型 ${usedModel} 請求未成功 (狀態碼: ${response.status})，自動備援切換至 gemini-2.5-flash 重試...`);
-    usedModel = 'gemini-2.5-flash';
-    response = await makeRequest(usedModel);
-  }
+  while (attempts <= maxAttempts) {
+    response = await makeRequest(selectedModel);
+    if (response.ok) break;
 
-  // 若 gemini-2.5-flash 仍遇到尖峰負載，最後備援嘗試 gemini-2.0-flash
-  if (!response.ok && usedModel !== 'gemini-2.0-flash') {
-    console.warn(`備援模型重試未成功，嘗試穩定備援 gemini-2.0-flash...`);
-    usedModel = 'gemini-2.0-flash';
-    response = await makeRequest(usedModel);
+    // 若遇到 Google 伺服器尖峰 (503 High Demand 或 429)，自動等待 1.5 秒重試
+    if ((response.status === 503 || response.status === 429) && attempts < maxAttempts) {
+      attempts++;
+      console.warn(`Gemini 伺服器流量尖峰 (狀態: ${response.status})，等待 1.5 秒後進行第 ${attempts} 次自動重試...`);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      continue;
+    }
+    break;
   }
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
     const message = errorData.error?.message || `API 回應錯誤碼: ${response.status}`;
-    throw new Error(`Gemini 辨識失敗 (${usedModel}): ${message}`);
+    throw new Error(`Gemini 3.8 Flash 辨識失敗: ${message}`);
   }
 
   const result = await response.json();
