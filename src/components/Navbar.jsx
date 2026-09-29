@@ -12,6 +12,8 @@ import {
   getGeminiModel,
   setGeminiModel,
   SUPPORTED_MODELS,
+  getWorkerProxyUrl,
+  setWorkerProxyUrl,
 } from '../services/geminiService';
 import { getFirebaseConfig, saveFirebaseConfig } from '../services/firebaseService';
 
@@ -19,6 +21,7 @@ export default function Navbar({ currentView, setCurrentView, groupData, onReset
   const [showSettings, setShowSettings] = useState(false);
   const [geminiModelInput, setGeminiModelInput] = useState(getGeminiModel());
   const [geminiKeyInput, setGeminiKeyInput] = useState(getGeminiApiKey());
+  const [workerProxyInput, setWorkerProxyInput] = useState(getWorkerProxyUrl());
   const [firebaseConfigInput, setFirebaseConfigInput] = useState(
     JSON.stringify(getFirebaseConfig() || {}, null, 2)
   );
@@ -28,6 +31,7 @@ export default function Navbar({ currentView, setCurrentView, groupData, onReset
     e.preventDefault();
     setGeminiApiKey(geminiKeyInput);
     setGeminiModel(geminiModelInput);
+    setWorkerProxyUrl(workerProxyInput);
     try {
       if (firebaseConfigInput.trim() && firebaseConfigInput.trim() !== '{}') {
         saveFirebaseConfig(JSON.parse(firebaseConfigInput));
@@ -156,7 +160,30 @@ export default function Navbar({ currentView, setCurrentView, groupData, onReset
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 font-mono text-slate-800"
                 />
                 <span className="text-[11px] text-slate-400 block mt-1">
-                  金鑰僅加密暫存在本機 LocalStorage，絕不上傳他人伺服器。
+                  若已使用下方 Cloudflare Worker 代理，此處可免填。
+                </span>
+              </div>
+
+              {/* Cloudflare Worker 代理網址 */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1 flex items-center justify-between">
+                  <span className="flex items-center gap-1">
+                    <Cloud className="w-3.5 h-3.5 text-amber-500" />
+                    Cloudflare Worker 代理網址 (免填金鑰 · 雲端保險箱)
+                  </span>
+                  <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">
+                    🟢 已連線
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  value={workerProxyInput}
+                  onChange={(e) => setWorkerProxyInput(e.target.value)}
+                  placeholder="https://gemini-proxy.xxx.workers.dev"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 font-mono text-[11px] text-slate-800"
+                />
+                <span className="text-[11px] text-slate-400 block mt-1">
+                  預設使用專屬 Worker 代理中繼，前端無須輸入 API Key 即可安全辨識菜單。
                 </span>
               </div>
 

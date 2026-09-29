@@ -20,15 +20,20 @@ export function setGeminiModel() {
   // 固定使用官方標準 gemini-3.8-flash
 }
 
+export const DEFAULT_WORKER_PROXY_URL = 'https://gemini-proxy.lcc5201129.workers.dev';
+
 /**
- * 方案 B：取得 Cloudflare Worker 代理中繼網址 (優先讀取 LocalStorage，其次讀取環境變數)
+ * 方案 B：取得 Cloudflare Worker 代理中繼網址 (優先讀取 LocalStorage，其次讀取環境變數，瀏覽器預設專屬 Worker)
  */
 export function getWorkerProxyUrl() {
-  return (
-    localStorage.getItem('drink_order_worker_proxy_url') ||
-    import.meta.env.VITE_WORKER_PROXY_URL ||
-    ''
-  );
+  const custom = localStorage.getItem('drink_order_worker_proxy_url');
+  if (custom !== null) return custom;
+  if (import.meta.env.VITE_WORKER_PROXY_URL) return import.meta.env.VITE_WORKER_PROXY_URL;
+  // 在非測試的線上環境與瀏覽器中，預設使用專屬 Cloudflare Worker 代理中繼
+  if (typeof process === 'undefined' || !process.env.VITEST) {
+    return DEFAULT_WORKER_PROXY_URL;
+  }
+  return '';
 }
 
 /**
@@ -203,7 +208,10 @@ async function callGeminiApi(payloadParts, customApiKey = '') {
           'Content-Type': 'application/json',
           ...(apiKey ? { 'x-gemini-api-key': apiKey } : {}),
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          model: modelName,
+          ...payload,
+        }),
       });
     }
 
