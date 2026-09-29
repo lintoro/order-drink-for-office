@@ -34,6 +34,7 @@ export default function ScreenC_Admin({
   onResetSystem,
   onArchiveGroup,
   onViewHistory,
+  onGoToOrder,
 }) {
   const [copyMsg, setCopyMsg] = useState('');
   const [editingPhone, setEditingPhone] = useState(groupData?.phone || '');
@@ -344,6 +345,17 @@ export default function ScreenC_Admin({
           >
             🥤 {hostOrder ? `主揪已點 (${hostOrder.items?.[0]?.itemName || '點我修改'})` : '+ 我也要點一杯'}
           </button>
+
+          {/* 👀 前往點餐頁面 */}
+          {onGoToOrder && (
+            <button
+              type="button"
+              onClick={onGoToOrder}
+              className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold rounded-lg transition-all flex items-center gap-1"
+            >
+              👀 前往同事點餐頁面
+            </button>
+          )}
 
           {/* 📦 結案歸檔此團 */}
           {onArchiveGroup && (

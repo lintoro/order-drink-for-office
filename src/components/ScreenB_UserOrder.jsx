@@ -225,8 +225,9 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
             <span>您擁有本團主揪權限</span>
           </div>
           <button
-            onClick={onGoToAdmin}
-            className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1 rounded-lg transition-all"
+            type="button"
+            onClick={() => onGoToAdmin && onGoToAdmin('admin')}
+            className="bg-amber-600 hover:bg-amber-700 text-white font-bold px-3 py-1 rounded-lg transition-all cursor-pointer"
           >
             進入主揪管理後台 →
           </button>

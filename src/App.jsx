@@ -200,7 +200,22 @@ export default function App() {
           <ScreenB_UserOrder
             groupData={groupData}
             onUpdateGroup={handleUpdateGroup}
-            onGoToAdmin={(targetView = 'admin') => setCurrentView(targetView)}
+            onGoToAdmin={(targetView) => {
+              const view = typeof targetView === 'string' ? targetView : 'admin';
+              if (view === 'admin') {
+                const token =
+                  groupData?.adminToken ||
+                  (groupData?.orderId ? getAdminToken(groupData.orderId) : '');
+                if (token && groupData?.orderId) {
+                  window.history.pushState(
+                    {},
+                    '',
+                    `?order=${groupData.orderId}&token=${token}`
+                  );
+                }
+              }
+              setCurrentView(view);
+            }}
           />
         )}
 
@@ -213,6 +228,12 @@ export default function App() {
             onResetSystem={handleResetSystem}
             onArchiveGroup={handleArchiveGroup}
             onViewHistory={() => setShowHistoryModal(true)}
+            onGoToOrder={() => {
+              if (groupData?.orderId) {
+                window.history.pushState({}, '', `?order=${groupData.orderId}`);
+              }
+              setCurrentView('order');
+            }}
           />
         )}
       </main>

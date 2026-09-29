@@ -90,7 +90,20 @@
 - **解決方案 (Solution)**：
   1. `ScreenA` 開團頁面新增主揪暱稱輸入與「🥤 我自己（主揪）也要喝」自選一杯展開面版，開團即自動排入第一筆訂單；`ScreenC` 管理後台隨時提供「🥤 我也要點/改我的飲料」彈窗調整。
   2. 建立 `ARCHIVED_GROUPS` 歷史結案歸檔庫，主揪點擊「📦 結案歸檔此團」後，完整封存開團記錄、同仁明細與金額核銷狀態，並提供專屬彈窗查閱明細、匯出 UTF-8 BOM CSV 報帳檔，以及「🔄 再次以這家開團」一鍵複製店家功能。
-- **後續防範 (Prevention)**：建立完整資料生命週期（建立 -> 進行 -> 結單 -> 歸檔），保障資料可追溯性。
+### [ISSUE-008] 同事點餐頁點擊「進入主揪管理後台」畫面全白問題
+- **發生日期**：2026-09-29
+- **涉及模組**：`ScreenB_UserOrder.jsx`, `App.jsx`
+- **問題現象**：在同事點餐頁頂部黃色橫幅點擊「進入主揪管理後台 →」，下方主畫面內容完全空白消失，僅剩最頂部導覽列。
+- **根本原因 (Root Cause)**：
+  - `ScreenB_UserOrder.jsx` 按鈕直接綁定 `onClick={onGoToAdmin}`，未包裝函式傳遞。
+  - 當 React 點擊事件觸發時，瀏覽器的點擊合成事件物件（SyntheticBaseEvent `e`）被當作第一個參數傳入 `onGoToAdmin(targetView = 'admin')`。
+  - 因 `e !== undefined`，預設值 `'admin'` 被忽略，`targetView` 接收了 Event 物件，導致 `setCurrentView(e)`。
+  - `App.jsx` 的條件式判斷（`currentView === 'admin'` 等）全部比對為 false，導致主畫面無法渲染任何元件而全白。
+- **解決方案 (Solution)**：
+  1. `ScreenB_UserOrder.jsx` 按鈕點擊改為顯式包裝：`onClick={() => onGoToAdmin && onGoToAdmin('admin')}`。
+  2. `App.jsx` 的 `onGoToAdmin` 增加型別防呆：若傳入不是字串強制校正為 `'admin'`，並同時將主揪 Admin Token 補齊至網址查詢參數中（`?order=...&token=...`），確保權限狀態完全吻合。
+  3. `ScreenC_Admin` 亦增加「👀 前往同事點餐頁面」雙向按鈕，提供主揪無縫切換。
+- **後續防範 (Prevention)**：在事件回呼中凡傳遞給 `setState` 之函式，嚴禁直接裸傳至 `onClick`，避免事件物件污染狀態。
 
 ---
 
