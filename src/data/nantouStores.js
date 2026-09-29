@@ -1010,6 +1010,92 @@ export const NANTOU_STORES = [
       { id: 'czmm_t2', name: '藍莓凍', price: 10 },
     ],
   },
+  {
+    id: 'store_shuiyun_nantou_sanhe',
+    name: '水云茶堂-阿里山鐵道紅茶',
+    branchName: '南投三和店',
+    phone: '049-2228800',
+    address: '南投市三和三路 47 號',
+    region: '中南部價',
+    area: '南投市區',
+    businessHours: '09:30 - 21:00',
+    isOpenToday: true,
+    tagline: '草屯發源特色手搖 · 阿里山鐵道紅茶與高山純茶',
+    categories: [
+      {
+        name: '阿里山鐵道純茶',
+        items: [
+          { id: 'sy_1', name: '阿里山鐵道紅茶', priceM: 25, priceL: 30 },
+          { id: 'sy_2', name: '阿里山清香青茶', priceM: 30, priceL: 35 },
+          { id: 'sy_3', name: '茉香綠茶', priceM: 25, priceL: 30 },
+        ],
+      },
+      {
+        name: '鐵道鮮奶與奶茶',
+        items: [
+          { id: 'sy_4', name: '鐵道鮮奶茶', priceM: 50, priceL: 60 },
+          { id: 'sy_5', name: '鐵道奶茶', priceM: 40, priceL: 50 },
+          { id: 'sy_6', name: '冬瓜鮮奶', priceM: 45, priceL: 55 },
+        ],
+      },
+      {
+        name: '古早風味特調',
+        items: [
+          { id: 'sy_7', name: '鐵道冬瓜檸檬', priceM: 40, priceL: 50 },
+          { id: 'sy_8', name: '仙草凍奶茶', priceM: 45, priceL: 55 },
+          { id: 'sy_9', name: '翡翠檸檬', priceM: 45, priceL: 55 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'sy_t1', name: '波霸珍珠', price: 10 },
+      { id: 'sy_t2', name: '嫩仙草凍', price: 10 },
+      { id: 'sy_t3', name: '椰果', price: 10 },
+    ],
+  },
+  {
+    id: 'store_wujia_nantou_datong',
+    name: '吳家紅茶冰',
+    branchName: '南投大同店',
+    phone: '0909-002028',
+    address: '南投市大同街 151 號',
+    region: '中南部價',
+    area: '南投市區',
+    businessHours: '09:00 - 21:00',
+    isOpenToday: true,
+    tagline: '經典古早味紅茶冰 · 大杯消暑首選',
+    categories: [
+      {
+        name: '古早味招牌系列',
+        items: [
+          { id: 'wj_1', name: '古早味紅茶冰', priceM: 25, priceL: 30 },
+          { id: 'wj_2', name: '決明大麥茶', priceM: 25, priceL: 30 },
+          { id: 'wj_3', name: '茉莉綠茶', priceM: 25, priceL: 30 },
+        ],
+      },
+      {
+        name: '復刻特調與鮮奶',
+        items: [
+          { id: 'wj_4', name: '復刻奶茶', priceM: 40, priceL: 45 },
+          { id: 'wj_5', name: '紅茶鮮奶', priceM: 50, priceL: 55 },
+          { id: 'wj_6', name: '檸檬紅茶', priceM: 40, priceL: 45 },
+        ],
+      },
+      {
+        name: '經典冬瓜系列',
+        items: [
+          { id: 'wj_7', name: '古早冬瓜茶', priceM: 25, priceL: 30 },
+          { id: 'wj_8', name: '冬瓜檸檬', priceM: 40, priceL: 45 },
+          { id: 'wj_9', name: '冬瓜鮮奶', priceM: 50, priceL: 55 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'wj_t1', name: '波霸珍珠', price: 10 },
+      { id: 'wj_t2', name: '椰果', price: 10 },
+      { id: 'wj_t3', name: '仙草凍', price: 10 },
+    ],
+  },
 
   // ==========================================
   // 二、南崗工業區周邊
@@ -1144,6 +1230,50 @@ export const NANTOU_STORES = [
       { id: 'czm_t1', name: '波霸', price: 5 },
       { id: 'czm_t2', name: '藍莓凍', price: 10 },
       { id: 'czm_t3', name: '椰果', price: 5 },
+    ],
+  },
+  {
+    id: 'store_mamatea_nangang_chenggong',
+    name: '紅茶媽媽',
+    branchName: '南投成功店',
+    phone: '049-2255462',
+    address: '南投市成功三路 33 號',
+    region: '中南部價',
+    area: '南崗工業區',
+    businessHours: '10:00 - 19:30',
+    isOpenToday: true,
+    tagline: '南崗工業區成功三路下午茶首選 · 古早味決明紅茶與甘蔗青茶',
+    categories: [
+      {
+        name: '媽媽招牌好茶',
+        items: [
+          { id: 'mm_1', name: '招牌古早味紅茶', priceM: 25, priceL: 30 },
+          { id: 'mm_2', name: '決明大麥茶', priceM: 25, priceL: 30 },
+          { id: 'mm_3', name: '翡翠綠茶', priceM: 25, priceL: 30 },
+          { id: 'mm_4', name: '高山青茶', priceM: 30, priceL: 35 },
+        ],
+      },
+      {
+        name: '招牌奶茶與厚鮮奶',
+        items: [
+          { id: 'mm_5', name: '古早味奶茶', priceM: 40, priceL: 50 },
+          { id: 'mm_6', name: '紅茶鮮奶', priceM: 50, priceL: 60 },
+          { id: 'mm_7', name: '珍珠鮮奶茶', priceM: 55, priceL: 65 },
+        ],
+      },
+      {
+        name: '天然特調系列',
+        items: [
+          { id: 'mm_8', name: '招牌甘蔗青茶', priceM: 50, priceL: 55 },
+          { id: 'mm_9', name: '冬瓜檸檬', priceM: 40, priceL: 50 },
+          { id: 'mm_10', name: '檸檬冬瓜青', priceM: 45, priceL: 55 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'mm_t1', name: '珍珠', price: 10 },
+      { id: 'mm_t2', name: '椰果', price: 10 },
+      { id: 'mm_t3', name: '嫩仙草', price: 10 },
     ],
   },
 
@@ -1496,5 +1626,68 @@ export const NANTOU_STORES = [
       },
     ],
     toppings: TOPPINGS_COMMON,
+  },
+  {
+    id: 'store_shuiyun_caotun_bishan',
+    name: '水云茶堂-阿里山鐵道紅茶',
+    branchName: '草屯碧山店',
+    phone: '049-2355586',
+    address: '草屯鎮碧山路 101 號',
+    region: '中南部價',
+    area: '草屯商圈',
+    businessHours: '09:00 - 21:30',
+    isOpenToday: true,
+    tagline: '草屯商圈外送必點 · 阿里山鐵道紅茶名店',
+    categories: [
+      {
+        name: '阿里山鐵道純茶',
+        items: [
+          { id: 'syct_1', name: '阿里山鐵道紅茶', priceM: 25, priceL: 30 },
+          { id: 'syct_2', name: '阿里山清香青茶', priceM: 30, priceL: 35 },
+          { id: 'syct_3', name: '茉香綠茶', priceM: 25, priceL: 30 },
+        ],
+      },
+      {
+        name: '鐵道鮮奶與奶茶',
+        items: [
+          { id: 'syct_4', name: '鐵道鮮奶茶', priceM: 50, priceL: 60 },
+          { id: 'syct_5', name: '冬瓜鮮奶', priceM: 45, priceL: 55 },
+          { id: 'syct_6', name: '仙草凍奶茶', priceM: 45, priceL: 55 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'syct_t1', name: '波霸珍珠', price: 10 },
+      { id: 'syct_t2', name: '嫩仙草凍', price: 10 },
+      { id: 'syct_t3', name: '椰果', price: 10 },
+    ],
+  },
+  {
+    id: 'store_mamatea_caotun_hushan',
+    name: '紅茶媽媽',
+    branchName: '草屯虎山店',
+    phone: '0909-543416',
+    address: '草屯鎮新厝里虎山路 552 號',
+    region: '中南部價',
+    area: '草屯商圈',
+    businessHours: '10:00 - 20:00',
+    isOpenToday: true,
+    tagline: '草屯虎山路古早味紅茶名店 · 招牌甘蔗青茶',
+    categories: [
+      {
+        name: '媽媽招牌茶',
+        items: [
+          { id: 'mmct_1', name: '招牌古早味紅茶', priceM: 25, priceL: 30 },
+          { id: 'mmct_2', name: '決明大麥茶', priceM: 25, priceL: 30 },
+          { id: 'mmct_3', name: '招牌甘蔗青茶', priceM: 50, priceL: 55 },
+          { id: 'mmct_4', name: '紅茶鮮奶', priceM: 50, priceL: 60 },
+        ],
+      },
+    ],
+    toppings: [
+      { id: 'mmct_t1', name: '珍珠', price: 10 },
+      { id: 'mmct_t2', name: '椰果', price: 10 },
+      { id: 'mmct_t3', name: '嫩仙草', price: 10 },
+    ],
   },
 ];

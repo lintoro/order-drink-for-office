@@ -143,6 +143,25 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
       const fiftyLanStores = NANTOU_STORES.filter((s) => s.name === '50嵐');
       expect(fiftyLanStores.length).toBeGreaterThanOrEqual(2);
 
+      // 檢查水云茶堂、吳家紅茶冰、紅茶老爹、紅茶媽媽
+      const shuiyunStores = NANTOU_STORES.filter((s) => s.name.includes('水云茶堂'));
+      expect(shuiyunStores.length).toBeGreaterThanOrEqual(2);
+      expect(shuiyunStores.some((s) => s.branchName.includes('三和'))).toBe(true);
+
+      const wujiaStores = NANTOU_STORES.filter((s) => s.name.includes('吳家紅茶冰'));
+      expect(wujiaStores.length).toBeGreaterThanOrEqual(1);
+      expect(wujiaStores[0].branchName).toBe('南投大同店');
+
+      const mamateaStores = NANTOU_STORES.filter((s) => s.name.includes('紅茶媽媽'));
+      expect(mamateaStores.length).toBeGreaterThanOrEqual(2);
+      const mamateaNangang = mamateaStores.find((s) => s.area === '南崗工業區');
+      expect(mamateaNangang).toBeDefined();
+      expect(mamateaNangang.phone).toBe('049-2255462');
+
+      const mrblackteaStore = NANTOU_STORES.find((s) => s.name.includes('紅茶老爹'));
+      expect(mrblackteaStore).toBeDefined();
+      expect(mrblackteaStore.phone).toBe('049-2233231');
+
       // 驗證每間門市皆具備必要欄位與 049 或 09 手機電話
       NANTOU_STORES.forEach((store) => {
         expect(store.phone).toMatch(/^(049-|09)/);
