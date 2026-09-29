@@ -123,6 +123,27 @@ export default function ScreenB_UserOrder({ groupData, onUpdateGroup, onGoToAdmi
     0
   );
 
+  // 空狀態防呆引導
+  if (!groupData) {
+    return (
+      <div className="max-w-md mx-auto my-12 p-8 bg-white border border-slate-200 rounded-3xl shadow-sm text-center space-y-4">
+        <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto text-3xl">
+          🥤
+        </div>
+        <h2 className="text-xl font-bold text-slate-800">目前尚無進行中的飲料團</h2>
+        <p className="text-sm text-slate-500 leading-relaxed">
+          辦公室目前還沒有人開團。您可以立即選一間南投在地名店，發起第一團揪同事喝飲料！
+        </p>
+        <button
+          onClick={() => (onGoToAdmin ? onGoToAdmin('create') : null)}
+          className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm"
+        >
+          ➕ 立即發起開團
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto p-4 space-y-5">
       {/* 主揪本機快捷按鈕 */}

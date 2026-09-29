@@ -30,6 +30,8 @@ export default function ScreenC_Admin({
   groupData,
   onUpdateGroup,
   isAuthorized = true,
+  onGoToCreate,
+  onResetSystem,
 }) {
   const [copyMsg, setCopyMsg] = useState('');
   const [editingPhone, setEditingPhone] = useState(groupData?.phone || '');
@@ -38,8 +40,20 @@ export default function ScreenC_Admin({
 
   if (!groupData) {
     return (
-      <div className="max-w-2xl mx-auto p-6 text-center text-slate-500">
-        目前尚未開團，請先至「主揪開團」頁面建立一個新團！
+      <div className="max-w-md mx-auto my-12 p-8 bg-white border border-slate-200 rounded-3xl shadow-sm text-center space-y-4">
+        <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto text-3xl">
+          👑
+        </div>
+        <h2 className="text-xl font-bold text-slate-800">目前尚無進行中的團購</h2>
+        <p className="text-sm text-slate-500 leading-relaxed">
+          您目前尚未發起飲料團。立即建立新團購，即可開始在辦公室揪團統計與管理！
+        </p>
+        <button
+          onClick={() => (onGoToCreate ? onGoToCreate() : null)}
+          className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 text-sm"
+        >
+          ➕ 立即發起開團
+        </button>
       </div>
     );
   }
@@ -161,6 +175,15 @@ export default function ScreenC_Admin({
             <span className="text-xs bg-slate-700 px-3 py-1 rounded-full font-mono text-slate-300">
               Token: {groupData.adminToken?.substring(0, 8)}... (已授權)
             </span>
+            {onResetSystem && (
+              <button
+                onClick={onResetSystem}
+                title="結束本團並清除暫存，重新開新團"
+                className="text-xs bg-rose-900/50 hover:bg-rose-800 text-rose-200 border border-rose-700/60 px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 font-bold"
+              >
+                🧹 結束此團
+              </button>
+            )}
           </div>
         </div>
 

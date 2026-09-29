@@ -9,7 +9,7 @@ import {
 } from '../services/geminiService';
 import { getFirebaseConfig, saveFirebaseConfig } from '../services/firebaseService';
 
-export default function Navbar({ currentView, setCurrentView, groupData }) {
+export default function Navbar({ currentView, setCurrentView, groupData, onResetSystem }) {
   const [showSettings, setShowSettings] = useState(false);
   const [geminiModelInput, setGeminiModelInput] = useState(getGeminiModel());
   const [geminiKeyInput, setGeminiKeyInput] = useState(getGeminiApiKey());
@@ -181,6 +181,28 @@ export default function Navbar({ currentView, setCurrentView, groupData }) {
                   未填寫時，系統將自動無縫使用本機 LocalStorage 即時跨分頁模式。
                 </span>
               </div>
+
+              {/* 系統重設 (清除本機暫存團購) */}
+              {onResetSystem && (
+                <div className="pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-slate-700 text-xs">重設團購資料</div>
+                      <div className="text-[11px] text-slate-400">清除當前團購，讓系統回到乾淨狀態</div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSettings(false);
+                        onResetSystem();
+                      }}
+                      className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 font-bold rounded-lg text-xs transition-all"
+                    >
+                      🧹 清除當前團購
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {savedTip && (
                 <div className="bg-emerald-50 text-emerald-700 font-bold p-2 rounded-lg text-center">

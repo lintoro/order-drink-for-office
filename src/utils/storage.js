@@ -34,6 +34,18 @@ export function saveGroupOrder(orderData) {
   }
 }
 
+// 清除當前團購資料 (重設乾淨系統)
+export function clearGroupOrder() {
+  try {
+    localStorage.removeItem(STORAGE_KEYS.CURRENT_GROUP);
+    window.dispatchEvent(new Event('drink_group_updated'));
+    return true;
+  } catch (e) {
+    console.error('清除團購資料失敗', e);
+    return false;
+  }
+}
+
 // 讀取/記錄上次填寫之同仁暱稱
 export function getLastNickname() {
   return localStorage.getItem(STORAGE_KEYS.USER_NICKNAME) || '';

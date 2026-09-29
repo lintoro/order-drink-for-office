@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { getGeminiApiKey, setGeminiApiKey } from '../src/services/geminiService';
-import { getCustomStores, saveCustomStore } from '../src/utils/storage';
+import { getCustomStores, saveCustomStore, getGroupOrder, saveGroupOrder, clearGroupOrder } from '../src/utils/storage';
 import { getFirebaseConfig, saveFirebaseConfig } from '../src/services/firebaseService';
 
 // Node 環境 localStorage mock
@@ -11,10 +11,34 @@ globalThis.localStorage = {
   removeItem: (k) => mockStorage.delete(k),
   clear: () => mockStorage.clear(),
 };
+globalThis.window = {
+  dispatchEvent: () => {},
+};
 
 describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
   beforeEach(() => {
     localStorage.clear();
+  });
+
+  // 0. 本機乾淨團購資料儲存與重設測試 (上線測試防呆)
+  describe('乾淨系統團購資料管理 (Storage Clean Mode)', () => {
+    it('系統剛建立時預設無任何開團假資料 (null)', () => {
+      expect(getGroupOrder()).toBeNull();
+    });
+
+    it('能夠儲存真實開團資料並支援一鍵清除重設乾淨系統', () => {
+      const realGroup = {
+        orderId: 'grp_real_123',
+        storeName: '鮮奶奶',
+        orders: [],
+      };
+      saveGroupOrder(realGroup);
+      expect(getGroupOrder()).toEqual(realGroup);
+
+      // 執行重設清除
+      clearGroupOrder();
+      expect(getGroupOrder()).toBeNull();
+    });
   });
 
   // 1. Gemini API Key 存取測試
