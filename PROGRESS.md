@@ -13,7 +13,7 @@
 | **Milestone 2** | 核心計算與狀態邏輯 | ✅ 已完成 | 2026-09-29 | 外送費無條件進位平攤、同暱稱覆蓋、下單文字聚合，10 項單元測試 100% 通過 |
 | **Milestone 3** | Gemini Flash 菜單辨識與店家庫 | ✅ 已完成 | 2026-09-29 | 支援相機拍照/圖片解析、結構化 JSON Schema、常用店家庫匯出/匯入備份 |
 | **Milestone 4** | 雲端即時同步與雙網址實測 | ✅ 已完成 | 2026-09-29 | 接入 Firebase Firestore 永不休眠架構、雙網址 Token 路由隔離、16 項測試通過 |
-| **Milestone 5** | 部署發布與使用者驗收 (UAT) | 🚀 部署中 | 2026-09-29 | 建置 GitHub Actions 自動部署工作流程，發布至 GitHub Pages |
+| **Milestone 5** | 部署發布與使用者驗收 (UAT) | 🚀 部署中 | 2026-09-29 | 採用 Vercel 雲端部署，完成 vercel.json SPA 路由配置 |
 
 ---
 
@@ -27,8 +27,8 @@
 - [x] 環境變數範本 (`.env.example`)
 - [x] 前端專案環境建置 (Vite 6 + React 18 + Tailwind CSS)
 - [x] 自動化測試環境建置 (Vitest 25 項單元測試全數通過)
-- [x] **GitHub Actions 自動構建部署工作流程 (`.github/workflows/deploy.yml`)**
-- [x] **Vite 相對路徑配置 (`base: './'`) 支援 GitHub Pages 子目錄加載**
+- [x] **Vercel 單頁應用路由重寫配置 (`vercel.json`)**
+- [x] **Vite 相對路徑配置 (`base: './'`) 支援各種 CDN/自訂網域**
 
 ### 2. Screen A：主揪開團與菜單設定
 - [x] 歷史店家庫選取下拉選單 (得正、50嵐、麻古預設菜單，含分店與分區屬性)
