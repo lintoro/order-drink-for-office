@@ -117,9 +117,62 @@ describe('P3 & P4 服務層與資料處理測試 (services.test.js)', () => {
       await expect(parseMenuFromTextOrUrl('   ')).rejects.toThrow('請輸入 Google 地圖連結、店家名稱或菜單文字');
     });
 
-    it('未設定 API Key 時應提示需要輸入金鑰', async () => {
+    it('未設定 API Key 與 Proxy 時應提示需要設定', async () => {
       const { parseMenuFromTextOrUrl } = await import('../src/services/geminiService');
       await expect(parseMenuFromTextOrUrl('得正 台北南港店', '')).rejects.toThrow('Google Gemini API Key');
+    });
+  });
+
+  // 6. 方案 A：本地菜單快取機制測試 (menuCache.js)
+  describe('方案 A：本地菜單快取 (menuCache)', () => {
+    it('能正確寫入並讀取快取，支援大小寫與多餘空格標準化', async () => {
+      const { getMenuFromCache, saveMenuToCache } = await import('../src/utils/menuCache');
+
+      const menuMock = {
+        storeName: 'UG 樂己',
+        branchName: '南投復興店',
+        phone: '049-2245678',
+        region: '中南部價',
+        categories: [{ name: '原茶', items: [{ name: '三蜜桂香茶', priceM: 40, priceL: 45 }] }],
+      };
+
+      saveMenuToCache('UG 樂己 南投復興店', menuMock);
+
+      // 測試不同空白或大小寫皆能命中
+      const cached1 = getMenuFromCache('  ug 樂己   南投復興店 ');
+      expect(cached1).not.toBeNull();
+      expect(cached1.storeName).toBe('UG 樂己');
+      expect(cached1._fromCache).toBe(true);
+
+      // 測試未快取的店家回傳 null
+      const nonCached = getMenuFromCache('不存在的店家 123');
+      expect(nonCached).toBeNull();
+    });
+
+    it('快取過期時自動清除並回傳 null', async () => {
+      const { getMenuFromCache, saveMenuToCache } = await import('../src/utils/menuCache');
+
+      const menuMock = { storeName: '測試過期店' };
+      // 傳入 -1 天表示已過期
+      saveMenuToCache('過期店', menuMock, -1);
+
+      const cached = getMenuFromCache('過期店');
+      expect(cached).toBeNull();
+    });
+  });
+
+  // 7. 方案 B：Cloudflare Worker 代理設定測試
+  describe('方案 B：Cloudflare Worker 代理中繼設定', () => {
+    it('能正確儲存與讀取 Worker 代理網址', async () => {
+      const { getWorkerProxyUrl, setWorkerProxyUrl } = await import('../src/services/geminiService');
+
+      expect(getWorkerProxyUrl()).toBe('');
+
+      setWorkerProxyUrl('https://drink-order-proxy.test.workers.dev/api/gemini');
+      expect(getWorkerProxyUrl()).toBe('https://drink-order-proxy.test.workers.dev/api/gemini');
+
+      setWorkerProxyUrl('');
+      expect(getWorkerProxyUrl()).toBe('');
     });
   });
 });

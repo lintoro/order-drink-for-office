@@ -6,6 +6,8 @@ import {
   parseMenuFromTextOrUrl,
   getGeminiApiKey,
   setGeminiApiKey,
+  getWorkerProxyUrl,
+  setWorkerProxyUrl,
 } from '../services/geminiService';
 import { getCustomStores, saveCustomStore } from '../utils/storage';
 import {
@@ -71,6 +73,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
   const [parseError, setParseError] = useState('');
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const [tempApiKey, setTempApiKey] = useState(getGeminiApiKey());
+  const [tempProxyUrl, setTempProxyUrl] = useState(getWorkerProxyUrl());
 
   const [createdResult, setCreatedResult] = useState(null);
   const [copyNotice, setCopyNotice] = useState('');
@@ -129,7 +132,8 @@ export default function ScreenA_Create({ onGroupCreated }) {
   const handleStartImageParsing = async () => {
     if (!menuImage) return;
     const currentKey = getGeminiApiKey();
-    if (!currentKey) {
+    const proxyUrl = getWorkerProxyUrl();
+    if (!currentKey && !proxyUrl) {
       setShowApiKeyModal(true);
       return;
     }
@@ -147,7 +151,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
       setMenuCategories(result.categories);
       setToppings(result.toppings);
       setSelectedStoreId('custom_parsed');
-      setSaveStoreNotice(`🎉 圖片辨識成功！已帶入「${result.storeName} ${result.branchName || ''}」菜單與${result.region || '分區'}價格。`);
+      setSaveStoreNotice(`🎉 圖片辨識成功！已帶入「${result.storeName} ${result.branchName || ''}」菜單與${result.region || '分區'}價格（已自動存入本地快取）。`);
       setTimeout(() => setSaveStoreNotice(''), 4000);
     } catch (err) {
       console.error(err);
@@ -157,7 +161,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
     }
   };
 
-  // 2. 啟動 Google 連結 / 店名 / 複製文字 AI 辨識
+  // 2. 啟動 Google 連結 / 店名 / 複製文字 AI 辨識 (整合方案 A 快取與方案 B 中繼)
   const handleStartTextParsing = async () => {
     const rawInput = textOrUrlInput.trim();
     if (!rawInput) {
@@ -168,13 +172,14 @@ export default function ScreenA_Create({ onGroupCreated }) {
     // 智慧偵測：若貼上的是 Google Search Viewer 內部加密連結
     if (rawInput.includes('google.com/searchviewer') && !rawInput.includes(' ')) {
       setParseError(
-        '💡 您貼上的是 Google 搜尋預覽的內部加密暫存連結（不含店名文字）。請直接輸入「手搖飲店名」（例如：清心福全 南投南陽店、得正、一沐日），或改貼 Google Maps 正式分享連結，AI 即可為您精準提取分店電話與南北定價！'
+        '💡 您貼上的是 Google 搜尋預覽的內部加密暫存連結（不含店名文字）。請直接輸入「手搖飲店名」（例如：UG 樂己 南投復興店、清心福全 南投南陽店），AI 即可為您精準提取分店電話與南北定價！'
       );
       return;
     }
 
     const currentKey = getGeminiApiKey();
-    if (!currentKey) {
+    const proxyUrl = getWorkerProxyUrl();
+    if (!currentKey && !proxyUrl) {
       setShowApiKeyModal(true);
       return;
     }
@@ -192,9 +197,16 @@ export default function ScreenA_Create({ onGroupCreated }) {
       setMenuCategories(result.categories);
       setToppings(result.toppings);
       setSelectedStoreId('custom_parsed');
-      setSaveStoreNotice(
-        `🎉 已成功識別「${result.storeName} ${result.branchName || ''}」！適用【${result.region || '分區定價'}】，電話：${result.phone || '無'}`
-      );
+
+      if (result._fromCache) {
+        setSaveStoreNotice(
+          `⚡【本地快取秒讀】「${result.storeName} ${result.branchName || ''}」已載入！0 秒響應、0 API 消耗！`
+        );
+      } else {
+        setSaveStoreNotice(
+          `🎉 已成功識別「${result.storeName} ${result.branchName || ''}」！適用【${result.region || '分區定價'}】，電話：${result.phone || '無'}（已快取）`
+        );
+      }
       setTimeout(() => setSaveStoreNotice(''), 5000);
     } catch (err) {
       console.error(err);
@@ -836,25 +848,56 @@ export default function ScreenA_Create({ onGroupCreated }) {
         </div>
       )}
 
-      {/* 快速輸入 Gemini API Key 彈窗 */}
+      {/* 快速輸入 Gemini API Key / Cloudflare Worker Proxy 彈窗 */}
       {showApiKeyModal && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-5 space-y-3 shadow-xl">
-            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-              <KeyRound className="w-4 h-4 text-emerald-600" />
-              請設定 Gemini API Key
-            </h3>
-            <p className="text-xs text-slate-500">
-              用於調用 Google Gemini 視覺與語言模型智慧生成手搖飲菜單。金鑰將僅保存在本機。
-            </p>
-            <input
-              type="password"
-              value={tempApiKey}
-              onChange={(e) => setTempApiKey(e.target.value)}
-              placeholder="貼上 AIzaSy..."
-              className="w-full px-3 py-2 text-xs border rounded-xl font-mono focus:ring-2 focus:ring-emerald-500"
-            />
-            <div className="flex justify-end gap-2 pt-2">
+          <div className="bg-white rounded-2xl max-w-md w-full p-5 space-y-4 shadow-xl">
+            <div>
+              <h3 className="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                <KeyRound className="w-4 h-4 text-emerald-600" />
+                Gemini 服務設定 (二擇一即可使用)
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                您可以設定 Cloudflare Worker 代理（推薦，保護金鑰且全辦公室共享快取），或直接輸入個人 Gemini API Key。
+              </p>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              {/* 方案 B: Cloudflare Worker 代理中繼 */}
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
+                <label className="font-bold text-slate-700 flex items-center justify-between">
+                  <span>方案 B：Cloudflare Worker 代理網址 (推薦)</span>
+                  <span className="text-[10px] text-emerald-600 font-normal">免填金鑰 · 共享快取</span>
+                </label>
+                <input
+                  type="text"
+                  value={tempProxyUrl}
+                  onChange={(e) => setTempProxyUrl(e.target.value)}
+                  placeholder="https://drink-order-proxy.your-subdomain.workers.dev/api/gemini"
+                  className="w-full px-3 py-2 text-xs bg-white border rounded-lg font-mono focus:ring-2 focus:ring-emerald-500"
+                />
+                <span className="text-[10px] text-slate-400 block">
+                  設定後前端請求將由您的 Worker 代理，API Key 隱藏於後端，完全無洩漏風險。
+                </span>
+              </div>
+
+              {/* 方案 A: 個人 API Key 直連 */}
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5">
+                <label className="font-bold text-slate-700 flex items-center justify-between">
+                  <span>方案 A：個人 Google Gemini API Key</span>
+                  <span className="text-[10px] text-slate-400 font-normal">僅保存在本機</span>
+                </label>
+                <input
+                  type="password"
+                  value={tempApiKey}
+                  onChange={(e) => setTempApiKey(e.target.value)}
+                  placeholder="貼上 AIzaSy..."
+                  className="w-full px-3 py-2 text-xs bg-white border rounded-lg font-mono focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-1 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setShowApiKeyModal(false)}
@@ -866,6 +909,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
                 type="button"
                 onClick={() => {
                   setGeminiApiKey(tempApiKey);
+                  setWorkerProxyUrl(tempProxyUrl);
                   setShowApiKeyModal(false);
                   if (aiMode === 'text' && textOrUrlInput.trim()) {
                     handleStartTextParsing();
@@ -873,7 +917,7 @@ export default function ScreenA_Create({ onGroupCreated }) {
                     handleStartImageParsing();
                   }
                 }}
-                className="px-4 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-bold"
+                className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all"
               >
                 儲存並開始辨識
               </button>

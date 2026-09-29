@@ -3,6 +3,8 @@
  * 預設升級支援最新世代 Google Gemini 3.8 Flash 模型 (具備結構化 JSON 輸出)
  */
 
+import { getMenuFromCache, saveMenuToCache } from '../utils/menuCache';
+
 export const SUPPORTED_MODELS = [
   { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash (Google 官方標準 Flash 模型)' },
 ];
@@ -16,6 +18,28 @@ export function getGeminiModel() {
 
 export function setGeminiModel() {
   // 固定使用官方標準 gemini-3.8-flash
+}
+
+/**
+ * 方案 B：取得 Cloudflare Worker 代理中繼網址 (優先讀取 LocalStorage，其次讀取環境變數)
+ */
+export function getWorkerProxyUrl() {
+  return (
+    localStorage.getItem('drink_order_worker_proxy_url') ||
+    import.meta.env.VITE_WORKER_PROXY_URL ||
+    ''
+  );
+}
+
+/**
+ * 方案 B：儲存 Cloudflare Worker 代理中繼網址至 LocalStorage
+ */
+export function setWorkerProxyUrl(url) {
+  if (url && url.trim()) {
+    localStorage.setItem('drink_order_worker_proxy_url', url.trim());
+  } else {
+    localStorage.removeItem('drink_order_worker_proxy_url');
+  }
 }
 
 /**
@@ -149,13 +173,15 @@ function formatParsedMenuData(parsedData) {
 }
 
 /**
- * 通用呼叫 Gemini API (含自動備援)
+ * 通用呼叫 Gemini API (支援直連 Google 或透過方案 B Cloudflare Worker 代理)
  */
 async function callGeminiApi(payloadParts, customApiKey = '') {
+  const proxyUrl = getWorkerProxyUrl();
   const apiKey = customApiKey || getGeminiApiKey();
 
-  if (!apiKey) {
-    throw new Error('請先輸入 Google Gemini API Key，或於 .env.local 中設定 VITE_GEMINI_API_KEY');
+  // 若未設定 Worker Proxy，則必須具備 API Key
+  if (!proxyUrl && !apiKey) {
+    throw new Error('請先輸入 Google Gemini API Key，或設定 Cloudflare Worker 代理網址！');
   }
 
   const payload = {
@@ -169,6 +195,19 @@ async function callGeminiApi(payloadParts, customApiKey = '') {
 
   const selectedModel = getGeminiModel();
   const makeRequest = (modelName) => {
+    // 方案 B：若有設定 Cloudflare Worker 代理，優先走中繼（保護金鑰 + 伺服器級快取）
+    if (proxyUrl) {
+      return fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(apiKey ? { 'x-gemini-api-key': apiKey } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+    }
+
+    // 方案 A：直連 Google 官方端點
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
     return fetch(url, {
       method: 'POST',
@@ -258,17 +297,35 @@ export async function parseMenuImageWithGemini(imageFile, customApiKey = '') {
     },
   ];
 
-  return callGeminiApi(parts, customApiKey);
+  const result = await callGeminiApi(parts, customApiKey);
+  // 方案 A：自動儲存至 LocalStorage 快取 (以店家名稱建索引)
+  if (result?.storeName) {
+    saveMenuToCache(result.storeName, result);
+    if (result.branchName) {
+      saveMenuToCache(`${result.storeName} ${result.branchName}`, result);
+    }
+  }
+  return result;
 }
 
 /**
  * 2. 呼叫 Gemini Flash 辨識 Google 地圖連結 / 店家名稱 / 複製文字 (文字與連結解析)
+ * 整合方案 A 本地快取：若曾解析過相同店名或網址，0 秒直接回傳，0 消耗 API！
  * @param {string} inputText - Google 地圖連結、店名或菜單文字內容
  * @param {string} customApiKey - 可選覆蓋 API Key
  */
 export async function parseMenuFromTextOrUrl(inputText, customApiKey = '') {
   if (!inputText || !inputText.trim()) {
     throw new Error('請輸入 Google 地圖連結、店家名稱或菜單文字！');
+  }
+
+  const trimmedInput = inputText.trim();
+
+  // 方案 A：先檢查本地 LocalStorage 快取是否命中
+  const cachedMenu = getMenuFromCache(trimmedInput);
+  if (cachedMenu) {
+    console.log('⚡ [方案 A] 命中本地菜單快取，0 秒回應且 0 API 消耗:', trimmedInput);
+    return cachedMenu;
   }
 
   const prompt = `你是一個專業的台灣手搖飲料專家與菜單解析工具。使用者提供了以下資訊，內容可能是：
@@ -278,7 +335,7 @@ export async function parseMenuFromTextOrUrl(inputText, customApiKey = '') {
 
 使用者提供的輸入內容如下：
 """
-${inputText.trim()}
+${trimmedInput}
 """
 
 請執行以下解析任務：
@@ -299,5 +356,10 @@ ${inputText.trim()}
 8. 一律使用正體中文（台灣繁體用語）。`;
 
   const parts = [{ text: prompt }];
-  return callGeminiApi(parts, customApiKey);
+  const result = await callGeminiApi(parts, customApiKey);
+
+  // 方案 A：解析成功後寫入本地 LocalStorage 快取 (預設存 7 天)
+  saveMenuToCache(trimmedInput, result);
+
+  return result;
 }
