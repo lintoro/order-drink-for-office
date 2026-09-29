@@ -51,6 +51,19 @@
   4. 主揪後台提供「📞 一鍵撥打門市電話 (`tel:...`)」與「複製號碼」，並將分店資訊自動整合進電話下單文字。
 - **後續防範 (Prevention)**：在自動化測試中加入 `extraInfo` 整合驗證，確保未來改動不破壞分店資訊的完整傳遞。
 
+### [ISSUE-004] GitHub Actions 部署 GitHub Pages 出現 HttpError: 404 Not Found (Get Pages site failed)
+- **發生日期**：2026-09-29
+- **涉及模組**：CI/CD 部署工作流程 (`.github/workflows/deploy.yml`)
+- **問題現象**：推送程式碼後，GitHub Actions 的 `build-and-deploy` 工作在執行 `actions/configure-pages@v5` 步驟時報錯：
+  `HttpError: Not Found - https://docs.github.com/rest/pages/pages#get-a-apiname-pages-site`
+  `Get Pages site failed. Please verify that the repository has Pages enabled and configured to build using GitHub Actions...`
+- **根本原因 (Root Cause)**：GitHub 儲存庫建立後，GitHub Pages 功能預設為關閉狀態或 Source 預設為 `Deploy from a branch`。當尚未在儲存庫 Settings -> Pages 中明確將 Source 切換為 `GitHub Actions` 時，GitHub Pages API 尚未對此儲存庫配置站點物件，查詢 API 會直接返回 404 Not Found。
+- **解決方案 (Solution)**：
+  1. 進入儲存庫設定頁面：`Settings` -> `Pages` (網址：`https://github.com/{owner}/{repo}/settings/pages`)。
+  2. 在 **Build and deployment** 下方的 **Source**，將下拉選單從 `Deploy from a branch` 切換為 **`GitHub Actions`**。
+  3. 切換後回到 **Actions** 頁面，點擊剛才失敗的 Run 點選 **「Re-run all jobs」**，即可順利通過驗證並發布成功。
+- **後續防範 (Prevention)**：在交接文件與部署說明中，明確提示此步驟為 GitHub 官方對首次使用 Actions 部署 Pages 的必要一次性權限設定。
+
 ---
 
 *（後續開發過程中的問題將持續追加於此）*
